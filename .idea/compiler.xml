@@ -9,5 +9,8 @@
         <module name="myRssFeed" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="myRssFeed" target="1.7" />
+    </bytecodeTargetLevel>
   </component>
 </project>
