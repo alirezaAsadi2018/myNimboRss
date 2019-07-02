@@ -4,7 +4,8 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.net.URL;
 
 /**
@@ -13,6 +14,7 @@ import java.net.URL;
  */
 public class App 
 {
+    public static final Logger logger = LoggerFactory.getLogger(App.class);
     public static void main( String[] args )
     {
         try {
@@ -22,6 +24,7 @@ public class App
             SyndFeed feed = input.build(new XmlReader(feedUrl));
 
             for (SyndEntry entry : feed.getEntries()) {
+
                 System.out.println(entry.getPublishedDate() + "\n"
                         + entry.getTitle() + "\n"
                         + entry.getDescription());
@@ -33,7 +36,7 @@ public class App
         }
         catch (Exception e) {
             e.printStackTrace();
-            System.out.println("ERROR: "+e.getMessage());
+            logger.error("ERROR: "+e.getMessage());
         }
     }
 }

@@ -1,5 +1,7 @@
 package in.nimbo;
 
+import in.nimbo.Exp.DBNotExistsExp;
+
 import java.sql.*;
 
 public class DaoImpl implements Dao {
@@ -10,27 +12,30 @@ public class DaoImpl implements Dao {
     private String dbUser = "admin";
     private String dbPassword = "admin";
 
-    public void connect() {
-        try {
+    public void connect() throws DBNotExistsExp {
             String url = "jdbc:mysql://" + hostName + ":" + port + "/" + dbName;
-            Connection conn = DriverManager.getConnection(url, dbUser, dbPassword);
-            checkTableExists(conn);
-            Statement statement = conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM news_table");
-            while (resultSet.next()){
-                System.out.println("id " + resultSet.getInt(1));
-                System.out.println("title " + resultSet.getString(2));
+            try( Connection conn = DriverManager.getConnection(url, dbUser, dbPassword)) {
+                Statement statement = conn.createStatement();
+                createTableIfNotExists(statement);
+                ResultSet resultSet = statement.executeQuery("SELECT * FROM news_table");
+                while (resultSet.next()){
+                    System.out.println("id " + resultSet.getInt(1));
+                    System.out.println("title " + resultSet.getString(2));
+                }
+            }
+            catch (Exception e) {
+                throw new DBNotExistsExp("database doesn't exist");
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
     }
-    public boolean checkTableExists(Connection conn) throws SQLException {
-        DatabaseMetaData dbmd = conn.getMetaData();
-        ResultSet rs = dbmd.getTables(null, null, dbName, null);
-        return rs.getRow() == 1;
+    public void createDatabaseIfNotExists(Statement statement) throws SQLException {
+        String sql = "CREATE DATABASE IF NOT EXISTS " + dbName + ")";
+        statement.execute(sql);
+    }
+    public void createTableIfNotExists(Statement statement) throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS " + dbTableName + "(\n"
+                + "	id integer PRIMARY KEY auto_increment,\n"
+                + "	title text, dscp text, agency text, dt datetime);";
+        statement.execute(sql);
     }
 }
