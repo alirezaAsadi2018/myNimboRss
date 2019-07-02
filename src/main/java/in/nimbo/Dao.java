@@ -14,4 +14,6 @@ public interface Dao {
     List<POJO> searchByTitle(String title) throws SQLException;
 
     List<POJO> getNews() throws SQLException;
+
+    public boolean candidateExists(POJO pojo) throws SQLException;
 }

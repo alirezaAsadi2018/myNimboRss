@@ -75,6 +75,9 @@ public class DaoImpl implements Dao {
 
     @Override
     public void insertCandidate(POJO pojo) throws SQLException {
+        if(candidateExists(pojo)) {
+            return;
+        }
         PreparedStatement preparedStatement = conn.prepareStatement("insert into " + dbTableName + " (title, dscp, agency, dt) values (?, ?, ?, ?)");
         preparedStatement.setString(1, pojo.getTitle());
         preparedStatement.setString(2, pojo.getDscp());
@@ -82,6 +85,16 @@ public class DaoImpl implements Dao {
         preparedStatement.setDate(4, new java.sql.Date(pojo.getDt().getTime()));
         preparedStatement.executeUpdate();
     }
+    @Override
+    public boolean candidateExists(POJO pojo) throws SQLException {
+        String sql = "select * from " + dbTableName + " where title = ? and dt = ?";
+        PreparedStatement preparedStatement = conn.prepareStatement(sql);
+        preparedStatement.setString(1, pojo.getTitle());
+        preparedStatement.setDate(2, new java.sql.Date(pojo.getDt().getTime()));
+        return preparedStatement.execute();
+
+    }
+
 
     public void close() throws SQLException {
         conn.close();
