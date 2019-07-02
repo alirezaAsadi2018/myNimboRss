@@ -25,18 +25,16 @@ public class App
         try {
             dao = DaoImpl.getInstance();
             dao.connect();
-            URL feedUrl = new URL("https://www.tabnak.ir/fa/rss/allnews");
+            URL feedUrl = new URL("https://www.farsnews.com/rss");
+//            URL feedUrl = new URL("https://www.tabnak.ir/fa/rss/allnews");
             SyndFeedInput input = new SyndFeedInput();
             SyndFeed feed = input.build(new XmlReader(feedUrl));
 
             for (SyndEntry entry : feed.getEntries()) {
                 String dscp="";
                 if(entry.getDescription() != null)
-                    dscp = entry.getDescription().toString();
+                    dscp = entry.getDescription().getValue();
                 dao.insertCandidate(entry.getTitle(), dscp, entry.getAuthor(), entry.getPublishedDate());
-//                System.out.println(entry.getPublishedDate() + "\n"
-//                        + entry.getTitle() + "\n"
-//                        + entry.getDescription());
 
             }
 

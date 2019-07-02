@@ -21,7 +21,7 @@ public class DaoImpl implements Dao {
     private Connection conn;
 
     private DaoImpl() throws DBNotExistsExp {
-        String url = "jdbc:mysql://" + hostName + ":" + port + "/" + dbName;
+        String url = "jdbc:mysql://" + hostName + ":" + port + "/" + dbName + "?useUnicode=true&characterEncoding=UTF-8";
         try {
             conn = DriverManager.getConnection(url, dbUser, dbPassword);
             Statement statement = conn.createStatement();
@@ -61,16 +61,19 @@ public class DaoImpl implements Dao {
 
     @Override
     public void insertCandidate(String title, String dscp, String agency, Date dt) throws SQLException {
-        DateFormat date = new SimpleDateFormat("YYYY-MM-dd hh:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd hh:mm:ss");
+        String date = dateFormat.format(dt);
         Statement statement = conn.createStatement();
-        String sql;
-        if (dscp.length() == 0)
-            sql = "insert into " + dbTableName + " (title, agency, dt) values(" + "\'" + title + "\'" + ", " +
-                    "\'" + agency + "\'" + ", " + "\'" + date.format(dt) + "\'" + ");";
-        else
-            sql = "insert into " + dbTableName + " (title, dscp, agency, dt) values(" + "\'" + title + "\'" + ", " + "\'" + dscp +
-                    "\'" + ", " + "\'" + agency + "\'" + ", " + "\'" + date.format(dt) + "\'" + ");";
-        statement.execute(sql);
+        StringBuilder sql = new StringBuilder();
+        sql.append("insert into ");
+        sql.append(dbTableName);
+        sql.append("(title, dscp, agency, dt) values(");
+        sql.append("\'"+title+"\',");
+        sql.append("\'"+dscp+"\',");
+        sql.append("\'" + agency + "\',");
+        sql.append("\'" + date + "\'");
+        sql.append(")");
+        statement.execute(sql.toString());
     }
 
     public void close() throws SQLException {
