@@ -11,7 +11,6 @@ public class Dao {
     public void connect() {
         try {
             String url = "jdbc:mysql://127.0.0.1:3306/"+dbName;
-
             Connection conn = DriverManager.getConnection(url, dbUser, dbPassword);
             checkDbExists(conn);
             Statement statement = conn.createStatement();
@@ -20,6 +19,7 @@ public class Dao {
                 System.out.println("id " + resultSet.getInt(1));
                 System.out.println("title " + resultSet.getString(2));
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
