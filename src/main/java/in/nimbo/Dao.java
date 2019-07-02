@@ -4,9 +4,10 @@ import in.nimbo.Exp.DBNotExistsExp;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 
 public interface Dao {
-//    int insertCandidate(String title, String dscp, String agency, String dt);
+    void insertCandidate(String title, String dscp, String agency, Date dt) throws SQLException;
 
     void connect() throws DBNotExistsExp;
 
