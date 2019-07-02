@@ -4,13 +4,14 @@ import in.nimbo.Exp.DBNotExistsExp;
 
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
+import java.util.List;
 
 public interface Dao {
-    void insertCandidate(String title, String dscp, String agency, Date dt) throws SQLException;
-
-    void connect() throws DBNotExistsExp;
+    public void insertCandidate(POJO pojo) throws SQLException;
 
     void createTableIfNotExists(Statement statement) throws SQLException;
 
+    List<POJO> searchByTitle(String title) throws SQLException;
+
+    List<POJO> getNews() throws SQLException;
 }

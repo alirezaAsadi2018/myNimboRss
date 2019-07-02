@@ -2,13 +2,10 @@ package in.nimbo;
 
 import in.nimbo.Exp.DBNotExistsExp;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.sql.*;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 public class DaoImpl implements Dao {
     private static DaoImpl instance;
@@ -42,16 +39,6 @@ public class DaoImpl implements Dao {
         return instance;
     }
 
-    public void connect() throws DBNotExistsExp {
-
-
-    }
-
-    public void createDatabaseIfNotExists(Statement statement) throws SQLException {
-        String sql = "CREATE DATABASE IF NOT EXISTS " + dbName + ")";
-        statement.execute(sql);
-    }
-
     public void createTableIfNotExists(Statement statement) throws SQLException {
         String sql = "CREATE TABLE IF NOT EXISTS " + dbTableName + "(\n"
                 + "	id integer PRIMARY KEY auto_increment,\n"
@@ -60,20 +47,40 @@ public class DaoImpl implements Dao {
     }
 
     @Override
-    public void insertCandidate(String title, String dscp, String agency, Date dt) throws SQLException {
-        DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd hh:mm:ss");
-        String date = dateFormat.format(dt);
+    public List<POJO> searchByTitle(String title) throws SQLException {
         Statement statement = conn.createStatement();
-        StringBuilder sql = new StringBuilder();
-        sql.append("insert into ");
-        sql.append(dbTableName);
-        sql.append("(title, dscp, agency, dt) values(");
-        sql.append("\'"+title+"\',");
-        sql.append("\'"+dscp+"\',");
-        sql.append("\'" + agency + "\',");
-        sql.append("\'" + date + "\'");
-        sql.append(")");
-        statement.execute(sql.toString());
+        PreparedStatement preparedStatement = conn.prepareStatement("select * from " +  dbTableName + " where title like  ? ");
+        preparedStatement.setString(1, "%" + title + "%");
+        ResultSet resultSet = preparedStatement.executeQuery();
+        List<POJO> list = new LinkedList<>();
+        while(resultSet.next()) {
+            list.add(new POJO(resultSet.getString(2), resultSet.getString(3),
+                    resultSet.getString(4), (Date)resultSet.getObject(5)));
+        }
+        return list;
+    }
+
+    @Override
+    public List<POJO> getNews() throws SQLException {
+        Statement statement = conn.createStatement();
+        PreparedStatement preparedStatement = conn.prepareStatement("select * from " +  dbTableName);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        List<POJO> list = new LinkedList<>();
+        while(resultSet.next()) {
+            list.add(new POJO(resultSet.getString(2), resultSet.getString(3),
+                    resultSet.getString(4), (Date)resultSet.getObject(5)));
+        }
+        return list;
+    }
+
+    @Override
+    public void insertCandidate(POJO pojo) throws SQLException {
+        PreparedStatement preparedStatement = conn.prepareStatement("insert into " + dbTableName + " (title, dscp, agency, dt) values (?, ?, ?, ?)");
+        preparedStatement.setString(1, pojo.getTitle());
+        preparedStatement.setString(2, pojo.getDscp());
+        preparedStatement.setString(3, pojo.getAgency());
+        preparedStatement.setDate(4, new java.sql.Date(pojo.getDt().getTime()));
+        preparedStatement.executeUpdate();
     }
 
     public void close() throws SQLException {
