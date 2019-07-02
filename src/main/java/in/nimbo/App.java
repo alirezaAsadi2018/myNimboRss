@@ -27,6 +27,9 @@ public class App
                         + entry.getDescription());
 
             }
+            DaoImpl dao = new DaoImpl();
+            dao.connect();
+
         }
         catch (Exception e) {
             e.printStackTrace();
