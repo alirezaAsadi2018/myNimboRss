@@ -6,13 +6,13 @@ import java.util.regex.Pattern;
 
 /*simple plain old java object class containing get/set methods to store data retrieved using DAO class*/
 
-public class POJO {
+public class News {
     private String title;
     private String dscp;
     private String agency;
     private Date dt;
 
-    public POJO(String title, String dscp, String agency, Date dt) {
+    public News(String title, String dscp, String agency, Date dt) {
         setTitle(title);
         setDscp(dscp);
         setAgency(agency);

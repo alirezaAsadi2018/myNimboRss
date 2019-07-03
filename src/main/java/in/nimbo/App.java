@@ -1,4 +1,5 @@
 package in.nimbo;
+import com.mysql.cj.log.Slf4JLogger;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
@@ -19,11 +20,12 @@ import java.util.List;
 public class App
 {
     private static final Logger logger = LoggerFactory.getLogger(App.class);
-    private final DaoImpl dao;
+    private static final Slf4JLogger slf4JLogger = new Slf4JLogger("App");
+    private final NewsDao newsDao;
     private final URL feedUrl;
 
-    public App(URL feedUrl) throws DBNotExistsExp {
-        this.dao = DaoImpl.getInstance();
+    public App(NewsDao newsDao, URL feedUrl) throws DBNotExistsExp {
+        this.newsDao = newsDao;
         this.feedUrl = feedUrl;
     }
 
@@ -36,26 +38,21 @@ public class App
             if(entry.getDescription() != null) {
                 dscp = entry.getDescription().getValue();
             }
-            dao.insertCandidate(new POJO(entry.getTitle(), dscp, entry.getAuthor(), entry.getPublishedDate()));
+            newsDao.insertCandidate(new News(entry.getTitle(), dscp, entry.getAuthor(), entry.getPublishedDate()));
         }
     }
-    public List<POJO> searchByTitle(String title) throws SQLException {
-        return dao.searchByTitle(title);
+    public List<News> searchByTitle(String title) throws SQLException {
+        return newsDao.searchByTitle(title);
     }
-    public List<POJO> getNews() throws SQLException {
-        return dao.getNews();
+    public List<News> getNews() throws SQLException {
+        return newsDao.getNews();
     }
     public static void main( String[] args )
     {
         App app = null;
         try {
             URL feedUrl = new URL("https://www.yjc.ir/en/rss/allnews");
-            app = new App(feedUrl);
-//            feedUrl = new URL("https://www.tabnak.ir/fa/rss/allnews");
-//            feedUrl = new URL("https://www.farsnews.com/rss");
-//            feedUrl = new URL("https://www.varzesh3.com/rss/all");
-//            feedUrl = new URL("https://news.google.com/rss");
-
+            app = new App(NewsDaoImpl.getInstance(), feedUrl);
             app.readRSS();
             System.out.println(app.getNews());
 //            System.out.println(app.searchByTitle("تهران").toString());
@@ -72,7 +69,7 @@ public class App
 
     private void closeDao() {
         try {
-            dao.close();
+            newsDao.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
