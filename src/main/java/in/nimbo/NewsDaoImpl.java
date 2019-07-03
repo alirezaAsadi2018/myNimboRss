@@ -1,38 +1,24 @@
 package in.nimbo;
 
-import com.mysql.cj.log.Slf4JLogger;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import in.nimbo.Exp.DBNotExistsExp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.File;
 import java.sql.*;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
 public class NewsDaoImpl implements NewsDao {
-    private static final Slf4JLogger logger = new Slf4JLogger("NewsDaoImpl");
+    private static final Logger logger = LoggerFactory.getLogger(NewsDaoImpl.class);
     private static NewsDaoImpl instance;
-    private String dbUser;
-    private String dbPassword;
-    private String dbName;
     private String dbTableName;
     private Connection conn;
 
-    private NewsDaoImpl() throws DBNotExistsExp {
-        try(InputStream stream = new FileInputStream("src/main/resources/config.properties")){
-            Properties dbProperties = new Properties();
-            dbProperties.load(stream);
-            dbName = dbProperties.getProperty("db.name");
-            dbTableName = dbProperties.getProperty("db.tableName");
-            String url = dbProperties.getProperty("db.url");
-            conn = DriverManager.getConnection(url, dbProperties.getProperty("db.username"), dbProperties.getProperty("db.password"));
-        } catch (SQLException e) {
-            throw new DBNotExistsExp("database doesn't exist");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private NewsDaoImpl() {
+
     }
 
     /**
@@ -42,7 +28,15 @@ public class NewsDaoImpl implements NewsDao {
      */
     public static NewsDaoImpl getInstance() throws DBNotExistsExp {
         if (instance == null)
-            return new NewsDaoImpl();
+            instance = new NewsDaoImpl();
+        try {
+            Config defaultConfig = ConfigFactory.parseFile(new File("src/main/resources/dbConfig.conf"));
+            instance.dbTableName = defaultConfig.getString("db.tableName");
+            String url = defaultConfig.getString("db.url");
+            instance.conn = DriverManager.getConnection(url, defaultConfig.getString("db.username"), defaultConfig.getString("db.password"));
+        } catch (SQLException e) {
+            throw new DBNotExistsExp("database doesn't exist");
+        }
         return instance;
     }
 
@@ -51,48 +45,74 @@ public class NewsDaoImpl implements NewsDao {
         try (PreparedStatement preparedStatement = conn.prepareStatement("select * from " + dbTableName + " where title like  ? ");
              ResultSet resultSet = preparedStatement.executeQuery()) {
             preparedStatement.setString(1, "%" + title + "%");
-            List<News> list = new LinkedList<>();
-            while (resultSet.next()) {
-                list.add(new News(resultSet.getString(2), resultSet.getString(3),
-                        resultSet.getString(4), (Date) resultSet.getObject(5)));
-            }
-            return list;
+            return getResultsFromResultSet(resultSet);
         }
+    }
+
+    @Override
+    public List<News> search(String request) throws SQLException {
+        switch (request){
+            case "title":
+
+                break;
+            case "date":
+
+                break;
+            case "dscp":
+
+                break;
+            case "link":
+
+                break;
+            default:
+                break;
+        }
+        return null;
     }
 
     @Override
     public List<News> getNews() throws SQLException {
         try (PreparedStatement preparedStatement = conn.prepareStatement("select * from " + dbTableName);
              ResultSet resultSet = preparedStatement.executeQuery()) {
-            List<News> list = new LinkedList<>();
-            while (resultSet.next()) {
-                list.add(new News(resultSet.getString(2), resultSet.getString(3),
-                        resultSet.getString(4), new java.util.Date(((Timestamp) resultSet.getObject(5)).getTime())));
-            }
-            return list;
+            return getResultsFromResultSet(resultSet);
         }
     }
+
+    private List<News> getResultsFromResultSet(ResultSet resultSet) throws SQLException {
+        List<News> list = new LinkedList<>();
+        while (resultSet.next()) {
+            list.add(new News(resultSet.getString(2), resultSet.getString(3),
+                    resultSet.getString(4), new java.util.Date(((Timestamp) resultSet.getObject(5)).getTime())));
+        }
+        return list;
+    }
+
+
 
     @Override
     public void insertCandidate(News news) throws SQLException {
         if (candidateExists(news)) {
             return;
         }
-        PreparedStatement preparedStatement = conn.prepareStatement("insert into " + dbTableName + " (title, dscp, agency, dt) values (?, ?, ?, ?)");
+        PreparedStatement preparedStatement = conn.prepareStatement("insert into " + dbTableName + " (title, dscp, link, dt) values (?, ?, ?, ?)");
         preparedStatement.setString(1, news.getTitle());
         preparedStatement.setString(2, news.getDscp());
-        preparedStatement.setString(3, news.getAgency());
+        preparedStatement.setString(3, news.getLink());
         preparedStatement.setDate(4, new java.sql.Date(news.getDt().getTime()));
         preparedStatement.executeUpdate();
     }
 
     @Override
     public boolean candidateExists(News news) throws SQLException {
-        String sql = "select * from " + dbTableName + " where title = ? and dt = ?";
+        String sql = "select count(*) as cnt from " + dbTableName + " where title = ? and dt = ?";
         PreparedStatement preparedStatement = conn.prepareStatement(sql);
         preparedStatement.setString(1, news.getTitle());
         preparedStatement.setDate(2, new java.sql.Date(news.getDt().getTime()));
-        return preparedStatement.execute();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()){
+            return resultSet.getInt("cnt") > 0;
+        }
+        return true;
 
     }
 

@@ -13,4 +13,6 @@ public interface NewsDao {
     public boolean candidateExists(News news) throws SQLException;
 
     public void close() throws SQLException;
+
+    public List<News> search(String title) throws SQLException;
 }
