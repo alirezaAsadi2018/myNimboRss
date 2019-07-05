@@ -22,8 +22,8 @@ public class App
     private final DaoImpl dao;
     private final URL feedUrl;
 
-    public App(URL feedUrl) throws DBNotExistsExp {
-        this.dao = DaoImpl.getInstance();
+    public App(URL feedUrl) throws SQLException {
+        this.dao = DaoImpl.getTestInstance();
         this.feedUrl = feedUrl;
     }
 

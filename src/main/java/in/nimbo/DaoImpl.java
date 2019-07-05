@@ -1,6 +1,7 @@
 package in.nimbo;
 
 import in.nimbo.Exp.DBNotExistsExp;
+import org.h2.tools.Server;
 
 import java.sql.*;
 import java.util.Date;
@@ -9,22 +10,27 @@ import java.util.List;
 
 public class DaoImpl implements Dao {
     private static DaoImpl instance;
-    private String hostName = "localhost";
-    private String port = "3306";
-    private String dbName = "news";
-    private String dbTableName = "news_table";
-    private String dbUser = "admin";
-    private String dbPassword = "admin";
+    private static DaoImpl testInstance;
+    private static String hostName = "localhost";
+    private static String port = "3306";
+    private static String dbName = "news";
+    private static String dbTableName = "news_table";
+    private static String dbUser = "admin";
+    private static String dbPassword = "admin";
     private Connection conn;
 
-    private DaoImpl() throws DBNotExistsExp {
-        String url = "jdbc:mysql://" + hostName + ":" + port + "/" + dbName + "?useUnicode=true&characterEncoding=UTF-8";
-        try {
+
+    private DaoImpl(boolean test) throws SQLException {
+        if (test) {
+            String url = "jdbc:h2:~/" + dbName;
             conn = DriverManager.getConnection(url, dbUser, dbPassword);
             Statement statement = conn.createStatement();
             createTableIfNotExists(statement);
-        } catch (Exception e) {
-            throw new DBNotExistsExp("database doesn't exist");
+        } else {
+            String url = "jdbc:mysql://" + hostName + ":" + port + "/" + dbName + "?useUnicode=true&characterEncoding=UTF-8";
+            conn = DriverManager.getConnection(url, dbUser, dbPassword);
+            Statement statement = conn.createStatement();
+            createTableIfNotExists(statement);
         }
     }
 
@@ -33,10 +39,18 @@ public class DaoImpl implements Dao {
      *
      * @return the only instance of this class
      */
-    public static DaoImpl getInstance() throws DBNotExistsExp {
-        if (instance == null)
-            return new DaoImpl();
+    public static DaoImpl getInstance() throws SQLException {
+        if (instance == null) {
+            instance = new DaoImpl(false);
+        }
         return instance;
+    }
+
+    public static DaoImpl getTestInstance() throws SQLException {
+        if (testInstance == null) {
+            testInstance = new DaoImpl(true);
+        }
+        return testInstance;
     }
 
     public void createTableIfNotExists(Statement statement) throws SQLException {
@@ -49,13 +63,13 @@ public class DaoImpl implements Dao {
     @Override
     public List<POJO> searchByTitle(String title) throws SQLException {
         Statement statement = conn.createStatement();
-        PreparedStatement preparedStatement = conn.prepareStatement("select * from " +  dbTableName + " where title like  ? ");
+        PreparedStatement preparedStatement = conn.prepareStatement("select * from " + dbTableName + " where title like  ? ");
         preparedStatement.setString(1, "%" + title + "%");
         ResultSet resultSet = preparedStatement.executeQuery();
         List<POJO> list = new LinkedList<>();
-        while(resultSet.next()) {
+        while (resultSet.next()) {
             list.add(new POJO(resultSet.getString(2), resultSet.getString(3),
-                    resultSet.getString(4), (Date)resultSet.getObject(5)));
+                    resultSet.getString(4), (Date) resultSet.getObject(5)));
         }
         return list;
     }
@@ -63,19 +77,19 @@ public class DaoImpl implements Dao {
     @Override
     public List<POJO> getNews() throws SQLException {
         Statement statement = conn.createStatement();
-        PreparedStatement preparedStatement = conn.prepareStatement("select * from " +  dbTableName);
+        PreparedStatement preparedStatement = conn.prepareStatement("select * from " + dbTableName);
         ResultSet resultSet = preparedStatement.executeQuery();
         List<POJO> list = new LinkedList<>();
-        while(resultSet.next()) {
+        while (resultSet.next()) {
             list.add(new POJO(resultSet.getString(2), resultSet.getString(3),
-                    resultSet.getString(4), (Date)resultSet.getObject(5)));
+                    resultSet.getString(4), (Date) resultSet.getObject(5)));
         }
         return list;
     }
 
     @Override
     public void insertCandidate(POJO pojo) throws SQLException {
-        if(candidateExists(pojo)) {
+        if (candidateExists(pojo)) {
             return;
         }
         PreparedStatement preparedStatement = conn.prepareStatement("insert into " + dbTableName + " (title, dscp, agency, dt) values (?, ?, ?, ?)");
@@ -85,6 +99,7 @@ public class DaoImpl implements Dao {
         preparedStatement.setDate(4, new java.sql.Date(pojo.getDt().getTime()));
         preparedStatement.executeUpdate();
     }
+
     @Override
     public boolean candidateExists(POJO pojo) throws SQLException {
         String sql = "select * from " + dbTableName + " where title = ? and dt = ?";
