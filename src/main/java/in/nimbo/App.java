@@ -11,18 +11,15 @@ import de.l3s.boilerpipe.extractors.CommonExtractors;
 import de.l3s.boilerpipe.sax.BoilerpipeSAXInput;
 import de.l3s.boilerpipe.sax.HTMLDocument;
 import de.l3s.boilerpipe.sax.HTMLFetcher;
-import in.nimbo.Exp.DBNotExistsExp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Main class for reading RSS from atleast 5 htmlUrls created by Alireza Asadi and Mostafa Ojaghi
@@ -38,21 +35,19 @@ public class App {
     }
 
     public static void main(String[] args) {
-        logger.debug("debug");
-        logger.error("error");
         App app = null;
         try {
             URL feedUrl = new URL("https://www.yjc.ir/en/rss/allnews");
             app = new App(NewsDaoImpl.getInstance(), feedUrl);
 //            app.readRSS();
-            System.out.println(app.search("title", "trump"));
+            logger.debug(app.search("title", "trump").toString());
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("error happened when calling app.search(...) ", e);
         } catch (MalformedURLException e) {
-            e.printStackTrace();
+            logger.error("error happened because the url is not well-formed ", e);
         } finally {
             assert app != null;
-//            app.closeDao();
+            app.closeDao();
         }
     }
 
@@ -72,8 +67,8 @@ public class App {
         for (SyndEntry entry : feed.getEntries()) {
             try {
                 dscp = getDscp(entry.getLink());
-            }catch (IOException e){
-                logger.error(e.getMessage());
+            } catch (IOException e) {
+                logger.error("cannot connect to the link; access denied!! ", e);
             }
             newsDao.insertCandidate(new News(entry.getTitle(), dscp, entry.getLink(), entry.getAuthor(), entry.getPublishedDate()));
         }
@@ -106,7 +101,7 @@ public class App {
         try {
             newsDao.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("cannot close news DAO ", e);
         }
     }
 

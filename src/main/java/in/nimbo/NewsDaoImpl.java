@@ -1,12 +1,8 @@
 package in.nimbo;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import in.nimbo.Exp.DBNotExistsExp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
