@@ -51,15 +51,6 @@ public class NewsDaoImpl implements NewsDao {
     }
 
     @Override
-    public List<News> searchByTitle(String title) throws SQLException {
-        try (PreparedStatement preparedStatement = conn.prepareStatement("select * from " + dbTableName + " where title like  ? ");
-             ResultSet resultSet = preparedStatement.executeQuery()) {
-            preparedStatement.setString(1, "%" + title + "%");
-            return getResultsFromResultSet(resultSet);
-        }
-    }
-
-    @Override
     public List<News> search(String request, String text) throws SQLException {
         String sql;
         switch (request) {
@@ -71,9 +62,6 @@ public class NewsDaoImpl implements NewsDao {
                 break;
             case "dscp":
                 sql = "select * from " + dbTableName + " where dscp like  ? ";
-                break;
-            case "link":
-                sql = "select * from " + dbTableName + " where link like  ? ";
                 break;
             case "agency":
                 sql = "select * from " + dbTableName + " where agency like  ? ";
