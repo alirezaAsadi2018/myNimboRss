@@ -14,5 +14,5 @@ public interface NewsDao {
 
     public void close() throws SQLException;
 
-    public List<News> search(String title) throws SQLException;
+    public List<News> search(String title, String text) throws SQLException;
 }
