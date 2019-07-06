@@ -39,17 +39,15 @@ public class App {
         logger.debug("debuging...");
         App app = null;
         try {
-            URL feedUrl = new URL("https://www.yjc.ir/en/rss/allnews");
+            URL feedUrl = new URL("https://www.mashreghnews.ir/rss");
             app = new App(NewsDaoImpl.getInstance(), feedUrl);
-//            app.readRSS();
+            app.readRSS();
             System.out.println(app.search("title", "trump"));
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+        } catch (SQLException | IOException | SAXException | FeedException | BoilerpipeProcessingException e) {
+            logger.error("", e);
         } finally {
             assert app != null;
-//            app.closeDao();
+            app.closeDao();
         }
     }
 
