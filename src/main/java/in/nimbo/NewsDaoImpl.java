@@ -50,24 +50,31 @@ public class NewsDaoImpl implements NewsDao {
     }
 
     @Override
-    public List<News> search(String request) throws SQLException {
+    public List<News> search(String request, String text) throws SQLException {
+        String sql;
         switch (request){
             case "title":
-
+                sql = "select * from " + dbTableName + " where title like  ? ";
                 break;
             case "date":
-
+                sql = "select * from " + dbTableName + " where date like  ? ";
                 break;
             case "dscp":
-
+                sql = "select * from " + dbTableName + " where dscp like  ? ";
                 break;
             case "link":
-
+                sql = "select * from " + dbTableName + " where link like  ? ";
+                break;
+            case "agency":
+                sql = "select * from " + dbTableName + " where agency like  ? ";
                 break;
             default:
-                break;
+                throw new IllegalArgumentException("wrong query is requested to be searched!");
         }
-        return null;
+        try(PreparedStatement ps  = conn.prepareStatement(sql)){
+            ps.setString(1, "%" + text + "%");
+            return getResultsFromResultSet(ps.executeQuery());
+        }
     }
 
     @Override
@@ -82,7 +89,7 @@ public class NewsDaoImpl implements NewsDao {
         List<News> list = new LinkedList<>();
         while (resultSet.next()) {
             list.add(new News(resultSet.getString(2), resultSet.getString(3),
-                    resultSet.getString(4), new java.util.Date(((Timestamp) resultSet.getObject(5)).getTime())));
+                    resultSet.getString(4), resultSet.getString(5), new java.util.Date(((Timestamp) resultSet.getObject(6)).getTime())));
         }
         return list;
     }
@@ -94,20 +101,21 @@ public class NewsDaoImpl implements NewsDao {
         if (candidateExists(news)) {
             return;
         }
-        PreparedStatement preparedStatement = conn.prepareStatement("insert into " + dbTableName + " (title, dscp, link, dt) values (?, ?, ?, ?)");
+        PreparedStatement preparedStatement = conn.prepareStatement("insert into " + dbTableName + " (title, dscp, link, agency, date) values (?, ?, ?, ?, ?)");
         preparedStatement.setString(1, news.getTitle());
         preparedStatement.setString(2, news.getDscp());
         preparedStatement.setString(3, news.getLink());
-        preparedStatement.setDate(4, new java.sql.Date(news.getDt().getTime()));
+        preparedStatement.setString(4, news.getAgency());
+        preparedStatement.setDate(5, new java.sql.Date(news.getDate().getTime()));
         preparedStatement.executeUpdate();
     }
 
     @Override
     public boolean candidateExists(News news) throws SQLException {
-        String sql = "select count(*) as cnt from " + dbTableName + " where title = ? and dt = ?";
+        String sql = "select count(*) as cnt from " + dbTableName + " where title = ? and date = ?";
         PreparedStatement preparedStatement = conn.prepareStatement(sql);
         preparedStatement.setString(1, news.getTitle());
-        preparedStatement.setDate(2, new java.sql.Date(news.getDt().getTime()));
+        preparedStatement.setDate(2, new java.sql.Date(news.getDate().getTime()));
         ResultSet resultSet = preparedStatement.executeQuery();
         if (resultSet.next()){
             return resultSet.getInt("cnt") > 0;

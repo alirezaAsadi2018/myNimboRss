@@ -8,13 +8,15 @@ public class News {
     private String title;
     private String dscp;
     private String link;
-    private Date dt;
+    private String agency;
+    private Date date;
 
-    public News(String title, String dscp, String link, Date dt) {
+    public News(String title, String dscp, String link, String agency, Date date) {
         setTitle(title);
         setDscp(dscp);
         setLink(link);
-        setDt(dt);
+        setAgency(agency);
+        setDt(date);
     }
 
     public String getTitle() {
@@ -41,17 +43,25 @@ public class News {
         this.link = link;
     }
 
-    public Date getDt() {
-        return dt;
+    public String getAgency() {
+        return agency;
     }
 
-    public void setDt(Date dt) {
-        this.dt = dt;
+    public void setAgency(String agency) {
+        this.agency = agency;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDt(Date date) {
+        this.date = date;
     }
 
     @Override
     public String toString() {
-        return getTitle() + "\n" + (getLink() != null && getLink().length() > 0 ? getLink() + "\n" : "") +
-                getDt() + "\n" + (getDscp() != null && getDscp().length() > 0 ? getDscp() : "");
+        return (getAgency() != null && getAgency().length() > 0 ? getAgency() + "\n" : "") + getTitle() + "\n" + (getLink() != null && getLink().length() > 0 ? getLink() + "\n" : "") +
+                getDate() + "\n" + (getDscp() != null && getDscp().length() > 0 ? getDscp() : "");
     }
 }

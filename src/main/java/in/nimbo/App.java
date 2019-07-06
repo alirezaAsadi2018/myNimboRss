@@ -41,22 +41,14 @@ public class App {
         try {
             URL feedUrl = new URL("https://www.yjc.ir/en/rss/allnews");
             app = new App(NewsDaoImpl.getInstance(), feedUrl);
-            app.readRSS();
-            System.out.println(app.getNews());
+//            app.readRSS();
+            System.out.println(app.search("title", "trump"));
         } catch (SQLException e) {
             e.printStackTrace();
         } catch (MalformedURLException e) {
             e.printStackTrace();
-        } catch (FeedException e) {
-            e.printStackTrace();
         } catch (DBNotExistsExp dbNotExistsExp) {
             dbNotExistsExp.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (BoilerpipeProcessingException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
         } finally {
             assert app != null;
             app.closeDao();
@@ -82,7 +74,7 @@ public class App {
             }catch (IOException e){
                 logger.error(e.getMessage());
             }
-            newsDao.insertCandidate(new News(entry.getTitle(), dscp, entry.getLink(), entry.getPublishedDate()));
+            newsDao.insertCandidate(new News(entry.getTitle(), dscp, entry.getLink(), entry.getAuthor(), entry.getPublishedDate()));
         }
     }
 
@@ -101,8 +93,8 @@ public class App {
         return CommonExtractors.ARTICLE_EXTRACTOR.getText(doc);
     }
 
-    public List<News> searchByTitle(String title) throws SQLException {
-        return newsDao.searchByTitle(title);
+    public List<News> search(String request, String title) throws SQLException {
+        return newsDao.search(request, title);
     }
 
     public List<News> getNews() throws SQLException {
