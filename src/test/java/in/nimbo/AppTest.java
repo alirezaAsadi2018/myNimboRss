@@ -1,7 +1,6 @@
 package in.nimbo;
 
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
-import in.nimbo.Exp.DBNotExistsExp;
 import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.SAXException;
@@ -15,15 +14,14 @@ import static org.junit.Assert.*;
 /**
  * Unit test for simple App.
  */
-public class AppTest 
-{
+public class AppTest {
     private App app;
 
     /**
      * Rigorous Test :-)
      */
     @Before
-    public void init(){
+    public void init() {
         try {
             URL siteUrl = new URL("https://www.yjc.ir/en/rss/allnews");
             app = new App(NewsDaoImpl.getInstance(), siteUrl);
@@ -31,10 +29,10 @@ public class AppTest
             e.printStackTrace();
         }
     }
+
     @Test
-    public void shouldAnswerWithTrue()
-    {
-        assertTrue( true );
+    public void shouldAnswerWithTrue() {
+        assertTrue(true);
     }
 
     @Test
@@ -49,7 +47,7 @@ public class AppTest
         } catch (SAXException e) {
             //
         } catch (IOException e) {
-           //
+            //
         }
 
     }
