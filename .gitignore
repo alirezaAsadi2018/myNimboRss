@@ -112,6 +112,7 @@ hs_err_pid*
 .iml
 *.iml
 .idea
+logs/
 target/
 pom.xml.tag
 pom.xml.releaseBackup
