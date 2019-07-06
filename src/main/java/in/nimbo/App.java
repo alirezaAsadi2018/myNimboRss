@@ -47,11 +47,9 @@ public class App {
             e.printStackTrace();
         } catch (MalformedURLException e) {
             e.printStackTrace();
-        } catch (DBNotExistsExp dbNotExistsExp) {
-            dbNotExistsExp.printStackTrace();
         } finally {
             assert app != null;
-            app.closeDao();
+//            app.closeDao();
         }
     }
 

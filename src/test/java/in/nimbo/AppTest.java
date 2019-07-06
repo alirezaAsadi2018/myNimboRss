@@ -27,8 +27,6 @@ public class AppTest
         try {
             URL siteUrl = new URL("https://www.yjc.ir/en/rss/allnews");
             app = new App(NewsDaoImpl.getInstance(), siteUrl);
-        } catch (DBNotExistsExp dbNotExistsExp) {
-            dbNotExistsExp.printStackTrace();
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }

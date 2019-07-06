@@ -7,9 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.*;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 
 public class NewsDaoImpl implements NewsDao {
     private static final Logger logger = LoggerFactory.getLogger(NewsDaoImpl.class);
@@ -18,7 +21,22 @@ public class NewsDaoImpl implements NewsDao {
     private Connection conn;
 
     private NewsDaoImpl() {
-
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileReader(Thread.currentThread().getContextClassLoader()
+                    .getResource("dbConfig.properties").getPath()));
+        } catch (IOException e) {
+            logger.error("", e);
+            System.exit(0);
+        }
+        dbTableName = properties.getProperty("db.tableName");
+        String url = properties.getProperty("db.url");
+        try {
+            conn = DriverManager.getConnection(url, properties.getProperty("db.username"),
+                    properties.getProperty("db.password"));
+        } catch (SQLException e) {
+            logger.error("", e);
+        }
     }
 
     /**
@@ -26,17 +44,9 @@ public class NewsDaoImpl implements NewsDao {
      *
      * @return the only instance of this class
      */
-    public static NewsDaoImpl getInstance() throws DBNotExistsExp {
+    public static NewsDaoImpl getInstance() {
         if (instance == null)
             instance = new NewsDaoImpl();
-        try {
-            Config defaultConfig = ConfigFactory.parseFile(new File(Thread.currentThread().getContextClassLoader().getResource("").getPath()));
-            instance.dbTableName = defaultConfig.getString("db.tableName");
-            String url = defaultConfig.getString("db.url");
-            instance.conn = DriverManager.getConnection(url, defaultConfig.getString("db.username"), defaultConfig.getString("db.password"));
-        } catch (SQLException e) {
-            throw new DBNotExistsExp("database doesn't exist");
-        }
         return instance;
     }
 
@@ -52,7 +62,7 @@ public class NewsDaoImpl implements NewsDao {
     @Override
     public List<News> search(String request, String text) throws SQLException {
         String sql;
-        switch (request){
+        switch (request) {
             case "title":
                 sql = "select * from " + dbTableName + " where title like  ? ";
                 break;
@@ -71,7 +81,7 @@ public class NewsDaoImpl implements NewsDao {
             default:
                 throw new IllegalArgumentException("wrong query is requested to be searched!");
         }
-        try(PreparedStatement ps  = conn.prepareStatement(sql)){
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, "%" + text + "%");
             return getResultsFromResultSet(ps.executeQuery());
         }
@@ -95,7 +105,6 @@ public class NewsDaoImpl implements NewsDao {
     }
 
 
-
     @Override
     public void insertCandidate(News news) throws SQLException {
         if (candidateExists(news)) {
@@ -117,7 +126,7 @@ public class NewsDaoImpl implements NewsDao {
         preparedStatement.setString(1, news.getTitle());
         preparedStatement.setDate(2, new java.sql.Date(news.getDate().getTime()));
         ResultSet resultSet = preparedStatement.executeQuery();
-        if (resultSet.next()){
+        if (resultSet.next()) {
             return resultSet.getInt("cnt") > 0;
         }
         return true;
