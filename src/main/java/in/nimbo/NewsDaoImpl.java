@@ -117,13 +117,6 @@ public class NewsDaoImpl implements NewsDao {
 
     }
 
-    public void createTableIfNotExists(Statement statement) throws SQLException {
-        String sql = "CREATE TABLE IF NOT EXISTS " + dbTableName + "(\n"
-                + "	id integer PRIMARY KEY auto_increment,\n"
-                + "	title text, dscp text, agency text, dt datetime);";
-        statement.execute(sql);
-    }
-
     public void close() throws SQLException {
         conn.close();
     }
