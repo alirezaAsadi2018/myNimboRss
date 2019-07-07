@@ -2,20 +2,22 @@ package in.nimbo;
 
 import com.rometools.rome.io.FeedException;
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
+import in.nimbo.exception.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.SQLException;
 import java.util.Scanner;
 
-public class Main {
-    private static final Logger logger = LoggerFactory.getLogger(App.class);
+public class Main implements ConfigsInCommon {
+    private static final Logger logger = LoggerFactory.getLogger(RssFeedReader.class);
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        RssFeedReader rssFeedReader = RssFeedReader.build();
         while (true) {
             System.out.println("1. add feed");
             System.out.println("2. print all");
@@ -26,21 +28,28 @@ public class Main {
                     System.out.println("enter rss url:");
                     try {
                         URL feedUrl = new URL(scanner.next());
-                        App app = new App(NewsDaoImpl.getInstance(), feedUrl);
-                        app.readRSS();
-                    } catch (FeedException | SQLException | SAXException | BoilerpipeProcessingException | IOException e) {
-                        logger.error("", e);
+                        rssFeedReader.readRSS(feedUrl);
+                    } catch (MalformedURLException e) {
+                        logger.error("The url is not well-formed. Change it! ", e);
+                    } catch (IOException e) {
+                        logger.error("Xml reader can not read the url. ", e);
+                    } catch (FeedException e) {
+                        logger.error(e.getMessage(), e);
+                    } catch (BoilerpipeProcessingException e) {
+                        logger.error(e.getMessage(), e);
+                    } catch (SAXException e) {
+                        logger.error(e.getMessage(), e);
                     }
                     break;
                 case 2:
                     try {
-                        System.out.println(NewsDaoImpl.getInstance().getNews());
-                    } catch (SQLException e) {
-                        logger.error("", e);
+                        System.out.println(rssFeedReader.getNews());
+                    } catch (ServiceException e) {
+                        logger.error(e.getMessage(), e);
                     }
                     break;
                 case 3:
-                    searchCommand(scanner);
+                    searchCommand(scanner, rssFeedReader);
                     break;
                 case 0:
                     System.exit(0);
@@ -51,40 +60,33 @@ public class Main {
         }
     }
 
-    private static void searchCommand(Scanner scanner) {
+
+    private static void searchCommand(Scanner scanner, RssFeedReader rssFeedReader) {
         System.out.println("search by:");
         System.out.println("1. title");
         System.out.println("2. report");
         System.out.println("3. agency");
         int num = scanner.nextInt();
         scanner.nextLine();
-        switch (num) {
-            case 1:
-                System.out.println("string to search");
-                try {
-                    System.out.println(NewsDaoImpl.getInstance().search("title", scanner.nextLine()));
-                } catch (SQLException e) {
-                    logger.error("", e);
-                }
-                break;
-            case 2:
-                System.out.println("string to search");
-                try {
-                    System.out.println(NewsDaoImpl.getInstance().search("dscp", scanner.nextLine()));
-                } catch (SQLException e) {
-                    logger.error("", e);
-                }
-                break;
-            case 3:
-                System.out.println("string to search");
-                try {
-                    System.out.println(NewsDaoImpl.getInstance().search("agency", scanner.nextLine()));
-                } catch (SQLException e) {
-                    logger.error("", e);
-                }
-                break;
-            default:
-                System.out.println("the number is not valid");
+        System.out.print("string to search: ");
+        try {
+            switch (num) {
+                case 1:
+                    System.out.println(rssFeedReader.search("title", scanner.nextLine()));
+                    break;
+                case 2:
+                    System.out.println(rssFeedReader.search("dscp", scanner.nextLine()));
+                    break;
+                case 3:
+                    System.out.println(rssFeedReader.search("agency", scanner.nextLine()));
+                    break;
+                default:
+                    System.out.println("the number is not valid");
+            }
+        }catch (IllegalArgumentException e){
+            logger.error(e.getMessage(), e);
+        } catch (ServiceException e) {
+            logger.error(e.getMessage(), e);
         }
     }
 }
