@@ -3,7 +3,7 @@ package in.nimbo;
 import org.junit.Test;
 
 
-public class NewsNewsDaoImplTest {
+public class NewsDaoImplTest {
 
     @Test
     public void connect() {

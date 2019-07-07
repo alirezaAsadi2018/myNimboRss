@@ -1,14 +1,22 @@
 package in.nimbo;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
 import java.util.Date;
 
 /*simple plain old java object class containing get/set methods to store data retrieved using DAO class*/
-
+@Entity
 public class News {
+    @Column(name = "title")
     private String title;
+    //dscp is the main content(description) of the news object
+    @Column(name = "dscp")
     private String dscp;
+    @Column(name = "link")
     private String link;
+    @Column(name = "agency")
     private String agency;
+    @Column(name = "date")
     private Date date;
 
     public News(String title, String dscp, String link, String agency, Date date) {
