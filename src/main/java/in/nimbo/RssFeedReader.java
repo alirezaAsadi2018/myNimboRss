@@ -11,17 +11,18 @@ import de.l3s.boilerpipe.extractors.CommonExtractors;
 import de.l3s.boilerpipe.sax.BoilerpipeSAXInput;
 import de.l3s.boilerpipe.sax.HTMLDocument;
 import de.l3s.boilerpipe.sax.HTMLFetcher;
-import in.nimbo.NewsDao.NewsDao;
-import in.nimbo.NewsDao.NewsDaoImpl;
+import in.nimbo.exception.UrlDaoException;
+import in.nimbo.news_dao.NewsDao;
 import in.nimbo.exception.NewsDaoException;
 import in.nimbo.exception.ServiceException;
+import in.nimbo.url_dao.UrlDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -29,20 +30,16 @@ import java.util.List;
  */
 public class RssFeedReader {
     private static final Logger logger = LoggerFactory.getLogger(RssFeedReader.class);
-    private final NewsDao newsDao;
+    private Configuration configuration;
+    private NewsDao newsDao;
+    private UrlDao urlDao;
 
-    public RssFeedReader(NewsDao newsDao) {
+    public RssFeedReader(Configuration configuration, NewsDao newsDao, UrlDao urlDao) {
+        this.configuration = configuration;
         this.newsDao = newsDao;
+        this.urlDao = urlDao;
     }
 
-    /**
-     * builder is for excluding Main class from getting concerned with getting instance from newsDaoImpl
-     *
-     * @return instance of this class
-     */
-    public static RssFeedReader build() {
-        return new RssFeedReader(NewsDaoImpl.getInstance());
-    }
 
 //    public static void main(String[] args) {
 //        RssFeedReader rssFeedReader = null;
@@ -59,14 +56,20 @@ public class RssFeedReader {
 
     /**
      * reads rss from the feedUrl passed to the constructor and inserts into the database
-     *
-     * @throws IOException
+     * @param feedUrl
      * @throws FeedException
-     * @throws SQLException
-     * @throws BoilerpipeProcessingException
      * @throws SAXException
+     * @throws BoilerpipeProcessingException
+     * @throws IOException
      */
     public void readRSS(URL feedUrl) throws FeedException, SAXException, BoilerpipeProcessingException, IOException {
+        if(!isValidUrl(feedUrl))
+            throw new MalformedURLException("the url is not valid");
+        try {
+            urlDao.insertUrl(feedUrl);
+        } catch (UrlDaoException e) {
+            logger.error(e.getMessage(), e);
+        }
         SyndFeedInput input = new SyndFeedInput();
         SyndFeed feed = input.build(new XmlReader(feedUrl));
         String dscp = "";
@@ -79,9 +82,14 @@ public class RssFeedReader {
             try {
                 newsDao.insertCandidate(new News(entry.getTitle(), dscp, entry.getLink(), entry.getAuthor(), entry.getPublishedDate()));
             } catch (NewsDaoException e) {
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
             }
         }
+    }
+
+    private boolean isValidUrl(URL url) {
+        String regex = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+        return url.toString().matches(regex);
     }
 
     /**

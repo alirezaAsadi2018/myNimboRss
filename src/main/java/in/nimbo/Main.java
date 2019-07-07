@@ -2,7 +2,11 @@ package in.nimbo;
 
 import com.rometools.rome.io.FeedException;
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
+import in.nimbo.news_dao.NewsDao;
+import in.nimbo.news_dao.NewsDaoImpl;
 import in.nimbo.exception.ServiceException;
+import in.nimbo.url_dao.UrlDao;
+import in.nimbo.url_dao.UrlDaoImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -12,12 +16,16 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
 
-public class Main implements ConfigsInCommon {
+public class Main {
     private static final Logger logger = LoggerFactory.getLogger(RssFeedReader.class);
 
+
     public static void main(String[] args) {
+        Configuration configuration = new Configuration();
+        NewsDao newsDao = new NewsDaoImpl(configuration);
+        UrlDao urlDao = new UrlDaoImpl(configuration);
+        RssFeedReader rssFeedReader = new RssFeedReader(configuration, newsDao, urlDao);
         Scanner scanner = new Scanner(System.in);
-        RssFeedReader rssFeedReader = RssFeedReader.build();
         while (true) {
             System.out.println("1. add feed");
             System.out.println("2. print all");
