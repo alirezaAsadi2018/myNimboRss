@@ -1,10 +1,11 @@
 package in.nimbo;
 
 import com.rometools.rome.io.FeedException;
+import com.zaxxer.hikari.HikariDataSource;
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
+import in.nimbo.exception.ServiceException;
 import in.nimbo.news_dao.NewsDao;
 import in.nimbo.news_dao.NewsDaoImpl;
-import in.nimbo.exception.ServiceException;
 import in.nimbo.url_dao.UrlDao;
 import in.nimbo.url_dao.UrlDaoImpl;
 import org.slf4j.Logger;
@@ -22,8 +23,10 @@ public class Main {
 
     public static void main(String[] args) {
         Configuration configuration = new Configuration();
-        NewsDao newsDao = new NewsDaoImpl(configuration);
-        UrlDao urlDao = new UrlDaoImpl(configuration);
+        Search search = new Search(configuration);
+        NewsDao newsDao = new NewsDaoImpl(configuration,
+                new HikariDataSource(configuration.getHikariConfig()), search);
+        UrlDao urlDao = new UrlDaoImpl(configuration, new HikariDataSource(configuration.getHikariConfig()));
         RssFeedReader rssFeedReader = new RssFeedReader(configuration, newsDao, urlDao);
         Scanner scanner = new Scanner(System.in);
         while (true) {
@@ -57,7 +60,7 @@ public class Main {
                     }
                     break;
                 case 3:
-                    searchCommand(scanner, rssFeedReader);
+                    searchCommand(scanner, rssFeedReader, search);
                     break;
                 case 0:
                     System.exit(0);
@@ -69,7 +72,7 @@ public class Main {
     }
 
 
-    private static void searchCommand(Scanner scanner, RssFeedReader rssFeedReader) {
+    private static void searchCommand(Scanner scanner, RssFeedReader rssFeedReader, Search search) {
         System.out.println("search by:");
         System.out.println("1. title");
         System.out.println("2. report");
@@ -80,18 +83,21 @@ public class Main {
         try {
             switch (num) {
                 case 1:
-                    System.out.println(rssFeedReader.search("title", scanner.nextLine()));
+                    search.addFilter(scanner.next(), Filter.title);
+                    System.out.println(rssFeedReader.search());
                     break;
                 case 2:
-                    System.out.println(rssFeedReader.search("dscp", scanner.nextLine()));
+                    search.addFilter(scanner.next(), Filter.dscp);
+                    System.out.println(rssFeedReader.search());
                     break;
                 case 3:
-                    System.out.println(rssFeedReader.search("agency", scanner.nextLine()));
+                    search.addFilter(scanner.next(), Filter.agency);
+                    System.out.println(rssFeedReader.search());
                     break;
                 default:
                     System.out.println("the number is not valid");
             }
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             logger.error(e.getMessage(), e);
         } catch (ServiceException e) {
             logger.error(e.getMessage(), e);

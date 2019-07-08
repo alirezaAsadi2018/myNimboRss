@@ -4,7 +4,6 @@ import in.nimbo.News;
 import in.nimbo.exception.NewsDaoException;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 public interface NewsDao {
@@ -15,7 +14,8 @@ public interface NewsDao {
 
     boolean candidateExists(News news) throws NewsDaoException;
 
-    List<News> search(String title, String text) throws NewsDaoException;
+    List<News> search() throws NewsDaoException;
 
-    public Connection getConnection() throws NewsDaoException;
+    Connection getConnection() throws NewsDaoException;
+
 }

@@ -11,10 +11,10 @@ import de.l3s.boilerpipe.extractors.CommonExtractors;
 import de.l3s.boilerpipe.sax.BoilerpipeSAXInput;
 import de.l3s.boilerpipe.sax.HTMLDocument;
 import de.l3s.boilerpipe.sax.HTMLFetcher;
-import in.nimbo.exception.UrlDaoException;
-import in.nimbo.news_dao.NewsDao;
 import in.nimbo.exception.NewsDaoException;
 import in.nimbo.exception.ServiceException;
+import in.nimbo.exception.UrlDaoException;
+import in.nimbo.news_dao.NewsDao;
 import in.nimbo.url_dao.UrlDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +56,7 @@ public class RssFeedReader {
 
     /**
      * reads rss from the feedUrl passed to the constructor and inserts into the database
+     *
      * @param feedUrl
      * @throws FeedException
      * @throws SAXException
@@ -63,7 +64,7 @@ public class RssFeedReader {
      * @throws IOException
      */
     public void readRSS(URL feedUrl) throws FeedException, SAXException, BoilerpipeProcessingException, IOException {
-        if(!isValidUrl(feedUrl))
+        if (!isValidUrl(feedUrl))
             throw new MalformedURLException("the url is not valid");
         try {
             urlDao.insertUrl(feedUrl);
@@ -107,9 +108,9 @@ public class RssFeedReader {
         return CommonExtractors.ARTICLE_EXTRACTOR.getText(doc);
     }
 
-    public List<News> search(String request, String title) throws ServiceException {
+    public List<News> search() throws ServiceException {
         try {
-            return newsDao.search(request, title);
+            return newsDao.search();
         } catch (NewsDaoException e) {
             throw new ServiceException("searching failed cannot access to database ", e);
         }

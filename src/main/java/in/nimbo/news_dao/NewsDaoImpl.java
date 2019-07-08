@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import in.nimbo.Configuration;
 import in.nimbo.News;
+import in.nimbo.Search;
 import in.nimbo.exception.NewsDaoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,25 +18,36 @@ public class NewsDaoImpl implements NewsDao {
     private static final Logger logger = LoggerFactory.getLogger(NewsDaoImpl.class);
     private String tableName;
     private HikariConfig hikariConfig;
+    private Search search;
+    private HikariDataSource ds;
 
+    /**
+     * this constructor is created because a no-arg constructor is necessary for mock junit testing
+     */
+    public NewsDaoImpl() {
+    }
 
-    public NewsDaoImpl(Configuration configuration) {
+    public NewsDaoImpl(Configuration configuration, HikariDataSource ds, Search search) {
+        this.ds = ds;
         Config config = configuration.getDbConfig();
+        this.search = search;
         tableName = config.getString("newsTable.tableName");
-        hikariConfig = new HikariConfig();
-        hikariConfig.setJdbcUrl(config.getString("db.url"));
-        hikariConfig.setUsername(config.getString("db.username"));
-        hikariConfig.setPassword(config.getString("db.password"));
-        hikariConfig.addDataSourceProperty("cachePrepStmts", true);
-        hikariConfig.addDataSourceProperty("prepStmtCacheSize", 250);
-        hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
-        hikariConfig.setMinimumIdle(20);
-        hikariConfig.setMaximumPoolSize(20);
+    }
+
+    public HikariConfig getHikariConfig() {
+        return hikariConfig;
+    }
+
+    public HikariDataSource getDs() {
+        return ds;
+    }
+
+    public String getTableName() {
+        return tableName;
     }
 
     public Connection getConnection() throws NewsDaoException {
         try {
-            HikariDataSource ds = new HikariDataSource(hikariConfig);
             Connection conn = ds.getConnection();
             return conn;
         } catch (SQLException e) {
@@ -44,28 +56,10 @@ public class NewsDaoImpl implements NewsDao {
     }
 
     @Override
-    public List<News> search(String request, String text) throws NewsDaoException {
-        String sql;
-        switch (request) {
-            case "title":
-                sql = "select * from " + tableName + " where title like  ? ";
-                break;
-            case "date":
-                sql = "select * from " + tableName + " where date like  ? ";
-                break;
-            case "dscp":
-                sql = "select * from " + tableName + " where dscp like  ? ";
-                break;
-            case "agency":
-                sql = "select * from " + tableName + " where agency like  ? ";
-                break;
-            default:
-                throw new IllegalArgumentException("wrong query is requested to be searched!");
-        }
+    public List<News> search() throws NewsDaoException {
         Connection conn = getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, "%" + text + "%");
-            return getResultsFromResultSet(ps.executeQuery());
+        try (Statement s = conn.createStatement()) {
+            return getResultsFromResultSet(s.executeQuery(search.getSql()));
         } catch (SQLException e) {
             throw new NewsDaoException(e.getMessage(), e);
         }
@@ -84,7 +78,7 @@ public class NewsDaoImpl implements NewsDao {
         }
     }
 
-    private List<News> getResultsFromResultSet(ResultSet resultSet) throws NewsDaoException {
+    public List<News> getResultsFromResultSet(ResultSet resultSet) throws NewsDaoException {
         try {
             List<News> list = new LinkedList<>();
             while (resultSet.next()) {
@@ -97,7 +91,6 @@ public class NewsDaoImpl implements NewsDao {
             throw new NewsDaoException(e.getMessage(), e);
         }
     }
-
 
     @Override
     public void insertCandidate(News news) throws NewsDaoException {
