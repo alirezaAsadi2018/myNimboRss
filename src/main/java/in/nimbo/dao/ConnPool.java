@@ -15,13 +15,6 @@ public class ConnPool {
         hikariConfig.setUsername(cofig.get("db.username"));
         hikariConfig.setPassword(cofig.get("db.password"));
         hikariConfig.setDataSourceProperties(cofig.getDsProp());
-//        hikariConfig.addDataSourceProperty("cachePrepStmts", true);
-//        hikariConfig.addDataSourceProperty("prepStmtCacheSize", 250);
-        hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", 2048);
-        hikariConfig.addDataSourceProperty("minimumIdle", 2048);
-        hikariConfig.addDataSourceProperty("maximumPoolSize", 2048);
-//        hikariConfig.setMinimumIdle(20);
-//        hikariConfig.setMaximumPoolSize(20);
         this.ds = new HikariDataSource(hikariConfig);
     }
 
