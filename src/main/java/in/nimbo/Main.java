@@ -1,14 +1,13 @@
 package in.nimbo;
 
 import com.rometools.rome.io.FeedException;
-import com.zaxxer.hikari.HikariDataSource;
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
 import in.nimbo.dao.ConnPool;
-import in.nimbo.exception.ServiceException;
 import in.nimbo.dao.news_dao.NewsDao;
 import in.nimbo.dao.news_dao.NewsDaoImpl;
 import in.nimbo.dao.url_dao.UrlDao;
 import in.nimbo.dao.url_dao.UrlDaoImpl;
+import in.nimbo.exception.ServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -19,14 +18,14 @@ import java.net.URL;
 import java.util.Scanner;
 
 public class Main {
-    private static final Logger logger = LoggerFactory.getLogger(RssFeedReader.class);
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
 
     public static void main(String[] args) {
         ConfigurationLoader configuration = new ConfigurationLoader();
         Search search = new Search(configuration);
         ConnPool pool = new ConnPool(configuration);
-        NewsDao newsDao = new NewsDaoImpl(configuration.getConfigMap().get("newsTable.tableName").toString(), pool, search);
+        NewsDao newsDao = new NewsDaoImpl(configuration.get("newsTable.tableName"), pool, search);
         UrlDao urlDao = new UrlDaoImpl(configuration.getConfigMap().get("urlTable.tableName").toString(), pool);
         RssFeedReader rssFeedReader = new RssFeedReader(configuration, newsDao, urlDao);
         Scanner scanner = new Scanner(System.in);

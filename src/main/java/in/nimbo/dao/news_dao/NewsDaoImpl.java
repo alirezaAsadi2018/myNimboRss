@@ -41,7 +41,7 @@ public class NewsDaoImpl implements NewsDao {
         try (Statement s = conn.createStatement()) {
             return getResultsFromResultSet(s.executeQuery(search.getSql()));
         } catch (SQLException e) {
-            throw new NewsDaoException(e.getMessage(), e);
+            throw new NewsDaoException(e);
         }
     }
 
@@ -71,7 +71,7 @@ public class NewsDaoImpl implements NewsDao {
             List<News> list = new LinkedList<>();
             while (resultSet.next()) {
                 list.add(new News(resultSet.getString(2), resultSet.getString(3),
-                        resultSet.getString(4), resultSet.getString(5), new java.util.Date(((Timestamp) resultSet.getObject(6)).getTime())));
+                        resultSet.getString(4), resultSet.getString(5), new java.util.Date((resultSet.getTimestamp(6)).getTime())));
             }
             return list;
         } catch (SQLException e) {
