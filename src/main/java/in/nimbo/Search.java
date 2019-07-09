@@ -4,7 +4,7 @@ public class Search {
     private String newsDaoTableName;
     private String sql = null;
 
-    public Search(Configuration configuration) {
+    public Search(ConfigurationLoader configuration) {
         this.newsDaoTableName = configuration.getDbConfig().getString("newsTable.tableName");
     }
 

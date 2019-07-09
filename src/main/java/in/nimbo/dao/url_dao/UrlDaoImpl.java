@@ -1,8 +1,6 @@
-package in.nimbo.url_dao;
+package in.nimbo.dao.url_dao;
 
-import com.typesafe.config.Config;
-import com.zaxxer.hikari.HikariDataSource;
-import in.nimbo.Configuration;
+import in.nimbo.dao.ConnPool;
 import in.nimbo.exception.UrlDaoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,20 +16,18 @@ import java.util.List;
 
 public class UrlDaoImpl implements UrlDao {
     private static final Logger logger = LoggerFactory.getLogger(UrlDaoImpl.class);
+    private final ConnPool pool;
     private String tableName;
-    private HikariDataSource ds;
 
 
-    public UrlDaoImpl(Configuration configuration, HikariDataSource ds) {
-        this.ds = ds;
-        Config config = configuration.getDbConfig();
-        tableName = config.getString("urlTable.tableName");
+    public UrlDaoImpl(String tableName, ConnPool pool) {
+        this.pool = pool;
+        this.tableName = tableName;
     }
 
     public Connection getConnection() throws UrlDaoException {
         try {
-            Connection conn = ds.getConnection();
-            return conn;
+            return pool.getConnection();
         } catch (SQLException e) {
             throw new UrlDaoException(e.getMessage(), e);
         }

@@ -1,11 +1,8 @@
-package in.nimbo.news_dao;
+package in.nimbo.dao.news_dao;
 
-import com.typesafe.config.Config;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import in.nimbo.Configuration;
 import in.nimbo.News;
 import in.nimbo.Search;
+import in.nimbo.dao.ConnPool;
 import in.nimbo.exception.NewsDaoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,50 +13,41 @@ import java.util.List;
 
 public class NewsDaoImpl implements NewsDao {
     private static final Logger logger = LoggerFactory.getLogger(NewsDaoImpl.class);
+    private final ConnPool pool;
     private String tableName;
-    private HikariConfig hikariConfig;
     private Search search;
-    private HikariDataSource ds;
 
     /**
      * this constructor is created because a no-arg constructor is necessary for mock junit testing
      */
     public NewsDaoImpl() {
+        pool = null;
     }
 
-    public NewsDaoImpl(Configuration configuration, HikariDataSource ds, Search search) {
-        this.ds = ds;
-        Config config = configuration.getDbConfig();
+    public NewsDaoImpl(String tableName, ConnPool pool, Search search) {
         this.search = search;
-        tableName = config.getString("newsTable.tableName");
-    }
-
-    public HikariConfig getHikariConfig() {
-        return hikariConfig;
-    }
-
-    public HikariDataSource getDs() {
-        return ds;
+        this.pool = pool;
+        this.tableName = tableName;
     }
 
     public String getTableName() {
         return tableName;
     }
 
-    public Connection getConnection() throws NewsDaoException {
-        try {
-            Connection conn = ds.getConnection();
-            return conn;
-        } catch (SQLException e) {
-            throw new NewsDaoException(e.getMessage(), e);
-        }
-    }
 
     @Override
     public List<News> search() throws NewsDaoException {
         Connection conn = getConnection();
         try (Statement s = conn.createStatement()) {
             return getResultsFromResultSet(s.executeQuery(search.getSql()));
+        } catch (SQLException e) {
+            throw new NewsDaoException(e.getMessage(), e);
+        }
+    }
+
+    public Connection getConnection() throws NewsDaoException {
+        try {
+            return pool.getConnection();
         } catch (SQLException e) {
             throw new NewsDaoException(e.getMessage(), e);
         }

@@ -1,4 +1,4 @@
-package in.nimbo.url_dao;
+package in.nimbo.dao.url_dao;
 
 import in.nimbo.exception.UrlDaoException;
 

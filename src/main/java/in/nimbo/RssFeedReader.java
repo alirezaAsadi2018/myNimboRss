@@ -14,8 +14,8 @@ import de.l3s.boilerpipe.sax.HTMLFetcher;
 import in.nimbo.exception.NewsDaoException;
 import in.nimbo.exception.ServiceException;
 import in.nimbo.exception.UrlDaoException;
-import in.nimbo.news_dao.NewsDao;
-import in.nimbo.url_dao.UrlDao;
+import in.nimbo.dao.news_dao.NewsDao;
+import in.nimbo.dao.url_dao.UrlDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -30,11 +30,11 @@ import java.util.List;
  */
 public class RssFeedReader {
     private static final Logger logger = LoggerFactory.getLogger(RssFeedReader.class);
-    private Configuration configuration;
+    private ConfigurationLoader configuration;
     private NewsDao newsDao;
     private UrlDao urlDao;
 
-    public RssFeedReader(Configuration configuration, NewsDao newsDao, UrlDao urlDao) {
+    public RssFeedReader(ConfigurationLoader configuration, NewsDao newsDao, UrlDao urlDao) {
         this.configuration = configuration;
         this.newsDao = newsDao;
         this.urlDao = urlDao;

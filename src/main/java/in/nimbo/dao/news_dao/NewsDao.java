@@ -1,4 +1,4 @@
-package in.nimbo.news_dao;
+package in.nimbo.dao.news_dao;
 
 import in.nimbo.News;
 import in.nimbo.exception.NewsDaoException;
@@ -17,5 +17,6 @@ public interface NewsDao {
     List<News> search() throws NewsDaoException;
 
     Connection getConnection() throws NewsDaoException;
+
 
 }
