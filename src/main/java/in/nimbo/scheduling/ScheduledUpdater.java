@@ -3,6 +3,9 @@ package in.nimbo.scheduling;
 import in.nimbo.RssFeedReader;
 import in.nimbo.dao.news_dao.NewsDao;
 import in.nimbo.dao.url_dao.UrlDao;
+import in.nimbo.exception.UrlDaoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.util.Timer;
@@ -10,6 +13,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 
 public class ScheduledUpdater {
+    private static final Logger logger = LoggerFactory.getLogger(ScheduledUpdater.class);
     private UrlDao urlDao;
     private ExecutorService executor;
     private NewsDao newsDao;
@@ -26,7 +30,11 @@ public class ScheduledUpdater {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                urlDao.getUrls().forEach(ScheduledUpdater.this::readUrl);
+                try {
+                    urlDao.getUrls().forEach(ScheduledUpdater.this::readUrl);
+                } catch (UrlDaoException e) {
+                    logger.error("can't get urls from database", e);
+                }
             }
         };
         Timer timer = new Timer(true);
