@@ -1,8 +1,8 @@
 package in.nimbo.scheduling;
 
-import in.nimbo.NewsDao.NewsDao;
 import in.nimbo.RssFeedReader;
-import in.nimbo.url_dao.UrlDao;
+import in.nimbo.dao.news_dao.NewsDao;
+import in.nimbo.dao.url_dao.UrlDao;
 
 import java.net.URL;
 import java.util.Timer;
@@ -34,6 +34,6 @@ public class ScheduledUpdater {
     }
 
     protected void readUrl(URL url) {
-        executor.submit(new ReedFeedTask(url, new RssFeedReader(newsDao)));
+        executor.submit(() -> new RssFeedReader(newsDao).readRSS(url));
     }
 }
