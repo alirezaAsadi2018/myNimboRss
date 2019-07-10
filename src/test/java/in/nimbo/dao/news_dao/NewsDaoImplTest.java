@@ -1,8 +1,7 @@
 package in.nimbo.dao.news_dao;
 
 import in.nimbo.ConfigurationLoader;
-import in.nimbo.Search;
-import in.nimbo.dao.ConnPool;
+import in.nimbo.SearchFilters;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,9 +15,9 @@ public class NewsDaoImplTest {
     @BeforeClass
     public static void beforeClass(){
         ConfigurationLoader configuration = new ConfigurationLoader();
-        Search search = new Search(configuration);
-        ConnPool pool = new ConnPool(configuration);
-        NewsDao newsDao = new NewsDaoImpl( configuration.get("newsTable.tableName"), pool, search);
+        SearchFilters searchFilters = new SearchFilters();
+//        HikariDataSource pool = new HikariDataSource(configuration);
+//        NewsDao newsDao = new NewsDaoImpl( configuration.get("newsTable.tableName"), pool);
     }
 
     @Test
@@ -36,9 +35,9 @@ public class NewsDaoImplTest {
 //    @Mock
 //    private Configuration configuration;
 //    @Mock
-//    private Search search;
+//    private SearchFilters search;
 //    @Mock
-//    ConnPool pool;
+//    HikariDataSource pool;
 //    @Spy
 //    NewsDaoImpl dao;
 //

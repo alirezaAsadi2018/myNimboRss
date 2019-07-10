@@ -1,32 +1,28 @@
 package in.nimbo.dao.news_dao;
 
+import com.zaxxer.hikari.HikariDataSource;
+import in.nimbo.Filter;
 import in.nimbo.News;
-import in.nimbo.Search;
-import in.nimbo.dao.ConnPool;
+import in.nimbo.SearchFilters;
 import in.nimbo.exception.NewsDaoException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.LinkedList;
 import java.util.List;
 
 public class NewsDaoImpl implements NewsDao {
-    private static final Logger logger = LoggerFactory.getLogger(NewsDaoImpl.class);
-    private final ConnPool pool;
+    private final HikariDataSource dataSource;
     private String tableName;
-    private Search search;
 
     /**
      * this constructor is created because a no-arg constructor is necessary for mock junit testing
      */
     public NewsDaoImpl() {
-        pool = null;
+        dataSource = null;
     }
 
-    public NewsDaoImpl(String tableName, ConnPool pool, Search search) {
-        this.search = search;
-        this.pool = pool;
+    public NewsDaoImpl(String tableName, HikariDataSource dataSource) {
+        this.dataSource = dataSource;
         this.tableName = tableName;
     }
 
@@ -36,10 +32,18 @@ public class NewsDaoImpl implements NewsDao {
 
 
     @Override
-    public List<News> search() throws NewsDaoException {
+    public List<News> search(SearchFilters searchFilters) throws NewsDaoException {
+        StringBuilder sql = new StringBuilder("select * from " + tableName + " where ");
+        for (Filter value : Filter.values()) {
+            for (String filterText : searchFilters.getFilterTexts(value)) {
+                sql.append(value.toString()).append(" like ").append("\"%").append(filterText).append("%\"");
+                sql.append(" and ");
+            }
+        }
+        sql.delete(sql.length() - 5, sql.length());//deleting last "and"
         Connection conn = getConnection();
         try (Statement s = conn.createStatement()) {
-            return getResultsFromResultSet(s.executeQuery(search.getSql()));
+            return getResultsFromResultSet(s.executeQuery(sql.toString()));
         } catch (SQLException e) {
             throw new NewsDaoException(e);
         }
@@ -47,9 +51,9 @@ public class NewsDaoImpl implements NewsDao {
 
     public Connection getConnection() throws NewsDaoException {
         try {
-            return pool.getConnection();
+            return dataSource.getConnection();
         } catch (SQLException e) {
-            throw new NewsDaoException(e.getMessage(), e);
+            throw new NewsDaoException(e);
         }
     }
 
@@ -62,7 +66,7 @@ public class NewsDaoImpl implements NewsDao {
                 return getResultsFromResultSet(resultSet);
             }
         } catch (SQLException e) {
-            throw new NewsDaoException(e.getMessage(), e);
+            throw new NewsDaoException(e);
         }
     }
 
@@ -70,13 +74,13 @@ public class NewsDaoImpl implements NewsDao {
         try {
             List<News> list = new LinkedList<>();
             while (resultSet.next()) {
-                list.add(new News(resultSet.getString(2), resultSet.getString(3),
-                        resultSet.getString(4), resultSet.getString(5), new java.util.Date((resultSet.getTimestamp(6)).getTime())));
+                list.add(new News(resultSet.getString("title"), resultSet.getString("description"),
+                        resultSet.getString("link"), resultSet.getString("agency"), resultSet.getDate("date")));
             }
             return list;
         } catch (SQLException e) {
 
-            throw new NewsDaoException(e.getMessage(), e);
+            throw new NewsDaoException(e);
         }
     }
 
@@ -89,13 +93,13 @@ public class NewsDaoImpl implements NewsDao {
                 return;
             }
             ps.setString(1, news.getTitle());
-            ps.setString(2, news.getDscp());
+            ps.setString(2, news.getDescription());
             ps.setString(3, news.getLink());
             ps.setString(4, news.getAgency());
             ps.setDate(5, new Date(news.getDate().getTime()));
             ps.executeUpdate();
         } catch (SQLException e) {
-            throw new NewsDaoException(e.getMessage(), e);
+            throw new NewsDaoException(e);
         }
     }
 
@@ -113,7 +117,7 @@ public class NewsDaoImpl implements NewsDao {
                 return true;
             }
         } catch (SQLException e) {
-            throw new NewsDaoException(e.getMessage(), e);
+            throw new NewsDaoException(e);
         }
 
     }

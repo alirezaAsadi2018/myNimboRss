@@ -9,9 +9,9 @@ import java.util.Date;
 public class News {
     @Column(name = "title")
     private String title;
-    //dscp is the main content(description) of the news object
-    @Column(name = "dscp")
-    private String dscp;
+    //description is the main content(description) of the news object
+    @Column(name = "description")
+    private String description;
     @Column(name = "link")
     private String link;
     @Column(name = "agency")
@@ -19,9 +19,9 @@ public class News {
     @Column(name = "date")
     private Date date;
 
-    public News(String title, String dscp, String link, String agency, Date date) {
+    public News(String title, String description, String link, String agency, Date date) {
         setTitle(title);
-        setDscp(dscp);
+        setDescription(description);
         setLink(link);
         setAgency(agency);
         setDt(date);
@@ -35,12 +35,12 @@ public class News {
         this.title = title;
     }
 
-    public String getDscp() {
-        return dscp;
+    public String getDescription() {
+        return description;
     }
 
-    public void setDscp(String dscp) {
-        this.dscp = dscp;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getLink() {
@@ -70,6 +70,6 @@ public class News {
     @Override
     public String toString() {
         return (getAgency() != null && getAgency().length() > 0 ? getAgency() + "\n" : "") + getTitle() + "\n" + (getLink() != null && getLink().length() > 0 ? getLink() + "\n" : "") +
-                getDate() + "\n" + (getDscp() != null && getDscp().length() > 0 ? getDscp() : "");
+                getDate() + "\n" + (getDescription() != null && getDescription().length() > 0 ? getDescription() : "");
     }
 }

@@ -8,6 +8,6 @@ public class ConnPoolTest {
 
     @Test
     public void testConnPool() {
-        ConnPool connPool = new ConnPool(new ConfigurationLoader());
+//        HikariDataSource connPool = new HikariDataSource(new ConfigurationLoader());
     }
 }
