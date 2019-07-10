@@ -69,11 +69,11 @@ public class NewsDaoImplTest {
 //    }
 //
 //    @Test
-//    public void insertCandidate() {
+//    public void insert() {
 //
 //    }
 //
 //    @Test
-//    public void candidateExists() {
+//    public void newsExist() {
 //    }
 }

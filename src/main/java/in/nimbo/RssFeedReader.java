@@ -43,7 +43,7 @@ public class RssFeedReader {
             for (SyndEntry entry : feed.getEntries()) {
                 try {
                     String description = getNewsContent(entry.getLink());
-                    newsDao.insertCandidate(new News(entry.getTitle(), description, entry.getLink(), entry.getAuthor(), entry.getPublishedDate()));
+                    newsDao.insert(new News(entry.getTitle(), description, entry.getLink(), entry.getAuthor(), entry.getPublishedDate()));
                 } catch (IOException e) {
                     logger.error("cannot connect to the the link: " + entry.getLink() + "; access denied!! ", e);
                 } catch (NewsDaoException e) {

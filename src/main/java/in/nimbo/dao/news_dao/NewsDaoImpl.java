@@ -14,12 +14,6 @@ public class NewsDaoImpl implements NewsDao {
     private final HikariDataSource dataSource;
     private String tableName;
 
-    /**
-     * this constructor is created because a no-arg constructor is necessary for mock junit testing
-     */
-    public NewsDaoImpl() {
-        dataSource = null;
-    }
 
     public NewsDaoImpl(String tableName, HikariDataSource dataSource) {
         this.dataSource = dataSource;
@@ -85,18 +79,18 @@ public class NewsDaoImpl implements NewsDao {
     }
 
     @Override
-    public void insertCandidate(News news) throws NewsDaoException {
+    public void insert(News news) throws NewsDaoException {
         String sql = "insert into " + tableName + " (title, dscp, link, agency, date) values (?, ?, ?, ?, ?)";
         Connection conn = getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (candidateExists(news)) {
+            if (newsExist(news)) {
                 return;
             }
             ps.setString(1, news.getTitle());
             ps.setString(2, news.getDescription());
             ps.setString(3, news.getLink());
             ps.setString(4, news.getAgency());
-            ps.setDate(5, new Date(news.getDate().getTime()));
+            ps.setTimestamp(5, new Timestamp(news.getDate().getTime()));
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new NewsDaoException(e);
@@ -104,12 +98,12 @@ public class NewsDaoImpl implements NewsDao {
     }
 
     @Override
-    public boolean candidateExists(News news) throws NewsDaoException {
+    public boolean newsExist(News news) throws NewsDaoException {
         String sql = "select count(*) as cnt from " + tableName + " where title = ? and date = ?";
         Connection conn = getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, news.getTitle());
-            ps.setDate(2, new java.sql.Date(news.getDate().getTime()));
+            ps.setTimestamp(2, new Timestamp(news.getDate().getTime()));
             try (ResultSet resultSet = ps.executeQuery()) {
                 if (resultSet.next()) {
                     return resultSet.getInt("cnt") > 0;

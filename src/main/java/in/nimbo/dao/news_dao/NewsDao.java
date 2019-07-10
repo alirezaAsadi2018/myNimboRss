@@ -9,11 +9,11 @@ import java.util.List;
 
 public interface NewsDao {
 
-    void insertCandidate(News news) throws NewsDaoException;
+    void insert(News news) throws NewsDaoException;
 
     List<News> getNews() throws NewsDaoException;
 
-    boolean candidateExists(News news) throws NewsDaoException;
+    boolean newsExist(News news) throws NewsDaoException;
 
     List<News> search(SearchFilters searchFilters) throws NewsDaoException;
 
