@@ -61,7 +61,7 @@ public class UrlDaoImpl implements UrlDao {
              ResultSet resultSet = ps.executeQuery()) {
             List<URL> list = new LinkedList<>();
             if (resultSet.next()) {
-                list.add(new URL(resultSet.getString(1)));
+                list.add(new URL(resultSet.getString(2)));
             }
             return list;
         } catch (SQLException | MalformedURLException e) {
