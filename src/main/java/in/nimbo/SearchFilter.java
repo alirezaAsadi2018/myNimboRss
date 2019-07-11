@@ -17,6 +17,10 @@ public class SearchFilter {
         filters.get(filter).add(text);
     }
 
+    public void clear() {
+        filters.forEach((filter, strings) -> strings.clear());
+    }
+
     /**
      * returns the texts the user has requested and wants the filtered data contain those texts
      *
