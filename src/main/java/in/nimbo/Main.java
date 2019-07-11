@@ -11,12 +11,14 @@ import in.nimbo.dao.url_dao.UrlDaoImpl;
 import in.nimbo.exception.NewsDaoException;
 import in.nimbo.exception.UrlDaoException;
 import in.nimbo.exception.UrlExistsException;
+import in.nimbo.scheduling.ScheduledUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -44,6 +46,8 @@ public class Main {
         NewsDao newsDao = new NewsDaoImpl(newsTableName, dataSource);
         UrlDao urlDao = new UrlDaoImpl(urlTableName, dataSource);
         Scanner scanner = new Scanner(System.in);
+
+        new ScheduledUpdater(urlDao, Executors.newFixedThreadPool(10), newsDao, 10 * 60).start();
         while (true) {
             System.out.println("1. add url");
             System.out.println("2. print all");
