@@ -19,6 +19,7 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.Timestamp;
 
 /**
  * Main class for reading RSS from atleast 5 htmlUrls created by Alireza Asadi and Mostafa Ojaghi
@@ -43,7 +44,7 @@ public class RssFeedReader {
             for (SyndEntry entry : feed.getEntries()) {
                 try {
                     String description = getNewsContent(entry.getLink());
-                    newsDao.insert(new News(entry.getTitle(), description, entry.getLink(), entry.getAuthor(), entry.getPublishedDate()));
+                    newsDao.insert(new News(entry.getTitle(), description, entry.getLink(), entry.getAuthor(), new Timestamp(entry.getPublishedDate().getTime())));
                 } catch (IOException e) {
                     logger.error("cannot connect to the the link: " + entry.getLink() + "; access denied!! ", e);
                 } catch (NewsDaoException e) {

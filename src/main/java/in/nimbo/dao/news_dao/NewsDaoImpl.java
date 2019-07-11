@@ -3,7 +3,7 @@ package in.nimbo.dao.news_dao;
 import com.zaxxer.hikari.HikariDataSource;
 import in.nimbo.Filter;
 import in.nimbo.News;
-import in.nimbo.SearchFilters;
+import in.nimbo.SearchFilter;
 import in.nimbo.exception.NewsDaoException;
 
 import java.sql.*;
@@ -12,38 +12,34 @@ import java.util.List;
 
 public class NewsDaoImpl implements NewsDao {
     private final HikariDataSource dataSource;
-    private String tableName;
+    private final String TABLENAME;
 
 
-    public NewsDaoImpl(String tableName, HikariDataSource dataSource) {
+    public NewsDaoImpl(String TABLENAME, HikariDataSource dataSource) {
         this.dataSource = dataSource;
-        this.tableName = tableName;
-    }
-
-    public String getTableName() {
-        return tableName;
+        this.TABLENAME = TABLENAME;
     }
 
 
     @Override
-    public List<News> search(SearchFilters searchFilters) throws NewsDaoException {
-        StringBuilder sql = new StringBuilder("select * from " + tableName + " where ");
+    public List<News> search(SearchFilter searchFilter) throws NewsDaoException {
+        StringBuilder sql = new StringBuilder("select * from " + TABLENAME + " where ");
         for (Filter value : Filter.values()) {
-            for (String filterText : searchFilters.getFilterTexts(value)) {
-                sql.append(value.toString()).append(" like ").append("\"%").append(filterText).append("%\"");
+            for (String filterText : searchFilter.getFilterTexts(value)) {
+                sql.append(value.toString()).append(" like ").append("\'%").append(filterText).append("%\'");
                 sql.append(" and ");
             }
         }
         sql.delete(sql.length() - 5, sql.length());//deleting last "and"
         Connection conn = getConnection();
-        try (Statement s = conn.createStatement()) {
-            return getResultsFromResultSet(s.executeQuery(sql.toString()));
+        try (PreparedStatement s = conn.prepareStatement(sql.toString())) {
+            return getResultsFromResultSet(s.executeQuery());
         } catch (SQLException e) {
             throw new NewsDaoException(e);
         }
     }
 
-    public Connection getConnection() throws NewsDaoException {
+    private Connection getConnection() throws NewsDaoException {
         try {
             return dataSource.getConnection();
         } catch (SQLException e) {
@@ -53,7 +49,7 @@ public class NewsDaoImpl implements NewsDao {
 
     @Override
     public List<News> getNews() throws NewsDaoException {
-        String sql = "select * from " + tableName;
+        String sql = "select * from " + TABLENAME;
         Connection conn = getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             try (ResultSet resultSet = ps.executeQuery()) {
@@ -64,12 +60,15 @@ public class NewsDaoImpl implements NewsDao {
         }
     }
 
-    public List<News> getResultsFromResultSet(ResultSet resultSet) throws NewsDaoException {
+    private List<News> getResultsFromResultSet(ResultSet resultSet) throws NewsDaoException {
         try {
             List<News> list = new LinkedList<>();
             while (resultSet.next()) {
-                list.add(new News(resultSet.getString("title"), resultSet.getString("description"),
-                        resultSet.getString("link"), resultSet.getString("agency"), resultSet.getDate("date")));
+                list.add(new News(resultSet.getString("title"),
+                        resultSet.getString("description"),
+                        resultSet.getString("link"),
+                        resultSet.getString("agency"),
+                        resultSet.getTimestamp("date")));
             }
             return list;
         } catch (SQLException e) {
@@ -80,7 +79,7 @@ public class NewsDaoImpl implements NewsDao {
 
     @Override
     public void insert(News news) throws NewsDaoException {
-        String sql = "insert into " + tableName + " (title, dscp, link, agency, date) values (?, ?, ?, ?, ?)";
+        String sql = "insert into " + TABLENAME + " (title, description, link, agency, date) values (?, ?, ?, ?, ?);";
         Connection conn = getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             if (newsExist(news)) {
@@ -90,7 +89,7 @@ public class NewsDaoImpl implements NewsDao {
             ps.setString(2, news.getDescription());
             ps.setString(3, news.getLink());
             ps.setString(4, news.getAgency());
-            ps.setTimestamp(5, new Timestamp(news.getDate().getTime()));
+            ps.setTimestamp(5, news.getDate());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new NewsDaoException(e);
@@ -99,13 +98,12 @@ public class NewsDaoImpl implements NewsDao {
 
     @Override
     public boolean newsExist(News news) throws NewsDaoException {
-        String sql = "select count(*) as cnt from " + tableName + " where title = ? and date = ?";
+        String sql = "select count(*) as cnt from " + TABLENAME + " where link = ?";
         Connection conn = getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, news.getTitle());
-            ps.setTimestamp(2, new Timestamp(news.getDate().getTime()));
+            ps.setString(1, news.getLink());
             try (ResultSet resultSet = ps.executeQuery()) {
-                if (resultSet.next()) {
+                if (resultSet.first()) {
                     return resultSet.getInt("cnt") > 0;
                 }
                 return true;

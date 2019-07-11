@@ -2,6 +2,7 @@ package in.nimbo;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import java.sql.Timestamp;
 import java.util.Date;
 
 /*simple plain old java object class containing get/set methods to store data retrieved using DAO class*/
@@ -17,14 +18,14 @@ public class News {
     @Column(name = "agency")
     private String agency;
     @Column(name = "date")
-    private Date date;
+    private Timestamp date;
 
-    public News(String title, String description, String link, String agency, Date date) {
+    public News(String title, String description, String link, String agency, Timestamp date) {
         setTitle(title);
         setDescription(description);
         setLink(link);
         setAgency(agency);
-        setDt(date);
+        setDate(date);
     }
 
     public String getTitle() {
@@ -59,12 +60,34 @@ public class News {
         this.agency = agency;
     }
 
-    public Date getDate() {
+    public Timestamp getDate() {
         return date;
     }
 
-    public void setDt(Date date) {
+    public void setDate(Timestamp date) {
         this.date = date;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(!(o instanceof News))
+            return false;
+        News that = (News)o;
+        return this.agency.equals(that.agency) &&
+               this.description.equals(that.description) &&
+               this.link.equals(that.link) &&
+               this.title.equals(that.title) &&
+               this.date.equals(that.date);
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = 0;
+        result = result * 37 + title.hashCode();
+        result = result * 23 + link.hashCode();
+        result = result * 31 + date.hashCode();
+        return result;
     }
 
     @Override

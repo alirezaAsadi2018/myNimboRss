@@ -10,6 +10,7 @@ import in.nimbo.dao.url_dao.UrlDao;
 import in.nimbo.dao.url_dao.UrlDaoImpl;
 import in.nimbo.exception.NewsDaoException;
 import in.nimbo.exception.UrlDaoException;
+import in.nimbo.exception.UrlExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,8 @@ public class Main {
                     } catch (UrlDaoException e) {
                         logger.error("url database insertion error", e);
                         System.err.println("Error: can not insert url.");
+                    } catch (UrlExistsException e) {
+                        logger.error("this url already exists in the database");
                     }
                     break;
                 case 2:
@@ -71,7 +74,7 @@ public class Main {
                     }
                     break;
                 case 3:
-                    searchCommand(scanner, newsDao, new SearchFilters());
+                    searchCommand(scanner, newsDao, new SearchFilter());
                     break;
                 case 0:
                     System.exit(0);
@@ -83,7 +86,7 @@ public class Main {
     }
 
 
-    private static void searchCommand(Scanner scanner, NewsDao newsDao, SearchFilters searchFilters) {
+    private static void searchCommand(Scanner scanner, NewsDao newsDao, SearchFilter searchFilter) {
         System.out.println("searchFilters by:");
         System.out.println("1. title");
         System.out.println("2. report");
@@ -94,16 +97,16 @@ public class Main {
         try {
             switch (num) {
                 case 1:
-                    searchFilters.addFilter(scanner.next(), Filter.title);
-                    System.out.println(newsDao.search(searchFilters));
+                    searchFilter.addFilter(scanner.next(), Filter.title);
+                    System.out.println(newsDao.search(searchFilter));
                     break;
                 case 2:
-                    searchFilters.addFilter(scanner.next(), Filter.dscp);
-                    System.out.println(newsDao.search(searchFilters));
+                    searchFilter.addFilter(scanner.next(), Filter.description);
+                    System.out.println(newsDao.search(searchFilter));
                     break;
                 case 3:
-                    searchFilters.addFilter(scanner.next(), Filter.agency);
-                    System.out.println(newsDao.search(searchFilters));
+                    searchFilter.addFilter(scanner.next(), Filter.agency);
+                    System.out.println(newsDao.search(searchFilter));
                     break;
                 default:
                     System.out.println("the number is not valid");

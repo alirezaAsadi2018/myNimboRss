@@ -1,10 +1,9 @@
 package in.nimbo.dao.news_dao;
 
 import in.nimbo.News;
-import in.nimbo.SearchFilters;
+import in.nimbo.SearchFilter;
 import in.nimbo.exception.NewsDaoException;
 
-import java.sql.Connection;
 import java.util.List;
 
 public interface NewsDao {
@@ -15,9 +14,6 @@ public interface NewsDao {
 
     boolean newsExist(News news) throws NewsDaoException;
 
-    List<News> search(SearchFilters searchFilters) throws NewsDaoException;
-
-    Connection getConnection() throws NewsDaoException;
-
+    List<News> search(SearchFilter searchFilter) throws NewsDaoException;
 
 }

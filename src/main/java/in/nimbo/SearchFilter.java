@@ -5,10 +5,10 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-public class SearchFilters {
+public class SearchFilter {
     private Map<Filter, ArrayList<String>> filters = new EnumMap<>(Filter.class);
 
-    public SearchFilters() {
+    public SearchFilter() {
         for (Filter filter : Filter.values())
             filters.put(filter, new ArrayList<>());
     }

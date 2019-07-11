@@ -2,6 +2,7 @@ package in.nimbo.dao.url_dao;
 
 import com.zaxxer.hikari.HikariDataSource;
 import in.nimbo.exception.UrlDaoException;
+import in.nimbo.exception.UrlExistsException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -24,12 +25,12 @@ public class UrlDaoImpl implements UrlDao {
 
 
     @Override
-    public void insertUrl(URL url) throws UrlDaoException {
+    public void insertUrl(URL url) throws UrlDaoException, UrlExistsException {
         if (urlExists(url))
-            return;
+            throw new UrlExistsException(new Exception());
         String sql = "insert into " + tableName + "(url) values (?)";
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, url.toString());
             ps.execute();
         } catch (SQLException e) {
@@ -37,10 +38,18 @@ public class UrlDaoImpl implements UrlDao {
         }
     }
 
+    private Connection getConnection() throws UrlDaoException {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new UrlDaoException(e);
+        }
+    }
+
     private boolean urlExists(URL url) throws UrlDaoException {
         String sql = "select count(*) as cnt from " + tableName + " where url = ?";
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, url.toString());
             try (ResultSet resultSet = ps.executeQuery()) {
                 if (resultSet.next()) {
@@ -56,12 +65,12 @@ public class UrlDaoImpl implements UrlDao {
     @Override
     public List<URL> getUrls() throws UrlDaoException {
         String sql = "select * from " + tableName;
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
+        Connection conn = getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet resultSet = ps.executeQuery()) {
             List<URL> list = new LinkedList<>();
-            if (resultSet.next()) {
-                list.add(new URL(resultSet.getString(1)));
+            while (resultSet.next()) {
+                list.add(new URL(resultSet.getString("url")));
             }
             return list;
         } catch (SQLException | MalformedURLException e) {
@@ -74,8 +83,8 @@ public class UrlDaoImpl implements UrlDao {
         if (!urlExists(url))
             return;
         String sql = "delete from " + tableName + " where url = ?";
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        Connection conn = getConnection();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, url.toString());
             ps.execute();
         } catch (SQLException e) {
