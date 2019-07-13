@@ -3,11 +3,15 @@ package in.nimbo;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import java.sql.Timestamp;
-import java.util.Date;
+import java.time.format.DateTimeFormatter;
 
 /*simple plain old java object class containing get/set methods to store data retrieved using DAO class*/
 @Entity
 public class News {
+
+    private static final DateTimeFormatter readFormatter = DateTimeFormatter.ofPattern("E MMM dd HH:mm:ss 'IRDT' yyyy");
+    private static final DateTimeFormatter writeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     @Column(name = "title")
     private String title;
     //description is the main content(description) of the news object
@@ -19,6 +23,14 @@ public class News {
     private String agency;
     @Column(name = "date")
     private Timestamp date;
+
+    public News(String title, String description, String link, String agency, String date) {
+        setTitle(title);
+        setDescription(description);
+        setLink(link);
+        setAgency(agency);
+        setDate(date);
+    }
 
     public News(String title, String description, String link, String agency, Timestamp date) {
         setTitle(title);
@@ -64,29 +76,34 @@ public class News {
         return date;
     }
 
-    public void setDate(Timestamp date) {
+    public void setDate(String date) {
+
+        this.date = Timestamp.valueOf(writeFormatter.format(readFormatter.parse(date)));
+    }
+
+    private void setDate(Timestamp date) {
         this.date = date;
     }
 
     @Override
     public boolean equals(Object o) {
-        if(!(o instanceof News))
+        if (!(o instanceof News))
             return false;
-        News that = (News)o;
+        News that = (News) o;
         return this.agency.equals(that.agency) &&
-               this.description.equals(that.description) &&
-               this.link.equals(that.link) &&
-               this.title.equals(that.title) &&
-               this.date.equals(that.date);
+                this.description.equals(that.description) &&
+                this.link.equals(that.link) &&
+                this.title.equals(that.title) &&
+                this.date.equals(that.date);
     }
 
 
     @Override
     public int hashCode() {
         int result = 0;
-        result = result * 37 + title.hashCode();
-        result = result * 23 + link.hashCode();
-        result = result * 31 + date.hashCode();
+        result = result * 37 + (title != null ? (title.hashCode()) : 0);
+        result = result * 23 + (link != null ? (link.hashCode()) : 0);
+        result = result * 31 + (date != null ? (date.hashCode()) : 0);
         return result;
     }
 

@@ -8,7 +8,9 @@ import java.util.List;
 
 public interface NewsDao {
 
-    void insert(News news) throws NewsDaoException;
+    void insertAllNews(List<News> allNews);
+
+    void insertNews(News news) throws NewsDaoException;
 
     List<News> getNews() throws NewsDaoException;
 

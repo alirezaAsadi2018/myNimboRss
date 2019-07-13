@@ -1,6 +1,7 @@
 package in.nimbo;
 
 import asg.cliche.ShellFactory;
+import com.rometools.rome.io.SyndFeedInput;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.zaxxer.hikari.HikariConfig;
@@ -42,13 +43,15 @@ public class Main {
 
         NewsDao newsDao = new NewsDaoImpl(newsTableName, dataSource);
         UrlDao urlDao = new UrlDaoImpl(urlTableName, dataSource);
+        SyndFeedInput syndFeedInput = new SyndFeedInput();
+        RssFeedReader rssFeedReader = new RssFeedReader(syndFeedInput);
 
-        new ScheduledUpdater(urlDao, Executors.newFixedThreadPool(10), newsDao, 10 * 60).start();
+        new ScheduledUpdater(urlDao, Executors.newFixedThreadPool(10), newsDao, rssFeedReader, 10 * 60).start();
         try {
             ShellFactory.createConsoleShell("rssReader", "", new MainMenu(urlDao, newsDao))
                     .commandLoop();
         } catch (IOException e) {
-            logger.error("error in command loop", e);
+            logger.error("error in Main command loop; 'cliche' can't readLine() from input", e);
         }
     }
 }

@@ -5,12 +5,18 @@ import in.nimbo.Filter;
 import in.nimbo.News;
 import in.nimbo.SearchFilter;
 import in.nimbo.exception.NewsDaoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
 public class NewsDaoImpl implements NewsDao {
+    private static final Logger logger = LoggerFactory.getLogger(NewsDao.class);
     private final HikariDataSource dataSource;
     private final String TABLENAME;
 
@@ -30,7 +36,7 @@ public class NewsDaoImpl implements NewsDao {
                 sql.append(" and ");
             }
         }
-        sql.delete(sql.length() - 5, sql.length());//deleting last "and"
+        sql.delete(sql.length() - 5, sql.length());//deleting last additional "and"
         Connection conn = getConnection();
         try (PreparedStatement s = conn.prepareStatement(sql.toString())) {
             return getResultsFromResultSet(s.executeQuery());
@@ -77,8 +83,18 @@ public class NewsDaoImpl implements NewsDao {
         }
     }
 
+    public void insertAllNews(List<News> allNews) {
+        for (News news : allNews) {
+            try {
+                insertNews(news);
+            } catch (NewsDaoException e) {
+                logger.error("one of the newsFeeds from link " + news.getLink() + "can't be added to database", e);
+            }
+        }
+    }
+
     @Override
-    public void insert(News news) throws NewsDaoException {
+    public void insertNews(News news) throws NewsDaoException {
         String sql = "insert into " + TABLENAME + " (title, description, link, agency, date) values (?, ?, ?, ?, ?);";
         Connection conn = getConnection();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

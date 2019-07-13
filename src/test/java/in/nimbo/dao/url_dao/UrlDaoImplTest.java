@@ -105,12 +105,11 @@ public class UrlDaoImplTest {
     }
 
     @Test
-    public void getUrls() throws MalformedURLException, SQLException, UrlDaoException {
+    public void getUrls() throws SQLException, UrlDaoException {
         for (URL url: urls) {
             insert(url);
         }
         List urlList = dao.getUrls();
-        System.out.println(urlList);
         Arrays.stream(urls).forEach(i -> assertTrue(urlList.contains(i)));
     }
 

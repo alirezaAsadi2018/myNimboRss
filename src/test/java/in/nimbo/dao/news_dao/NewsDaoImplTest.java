@@ -15,8 +15,6 @@ import org.junit.Test;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -87,7 +85,7 @@ public class NewsDaoImplTest {
     public void insertTestWithGetConnectionException() throws SQLException {
         when(ds.getConnection()).thenThrow(new SQLException());
         try {
-            dao.insert(expectedNews);
+            dao.insertNews(expectedNews);
             fail();
         } catch (NewsDaoException e) {
             //passed test
@@ -96,7 +94,7 @@ public class NewsDaoImplTest {
 
     @Test
     public void insertTestEquals() throws NewsDaoException, SQLException {
-        dao.insert(expectedNews);
+        dao.insertNews(expectedNews);
         PreparedStatement ps = connection.prepareStatement("select * from " + TABLENAME + ";");
         ResultSet resultSet = ps.executeQuery();
         if (resultSet.first()) {
@@ -114,7 +112,7 @@ public class NewsDaoImplTest {
 
     @Test
     public void insertTestCountInscreased() throws SQLException, NewsDaoException {
-        dao.insert(expectedNews);
+        dao.insertNews(expectedNews);
         final int cntExpected = 1;
         PreparedStatement ps = connection.prepareStatement("select count(*) as cnt from " + TABLENAME + ";");
         ResultSet resultSet = ps.executeQuery();
@@ -132,7 +130,7 @@ public class NewsDaoImplTest {
         assertTrue(dao.newsExist(expectedNews));
 
         //test when one/more-than-one column is/are null
-        News news = new News(null, "a", "b", "c", null);
+        News news = new News(null, "a", "b", "c", (Timestamp) null);
         insert(news);
         assertTrue(dao.newsExist(news));
 
@@ -149,21 +147,6 @@ public class NewsDaoImplTest {
         searchFilter.addFilter("c", Filter.title);
         searchFilter.addFilter("aaa", Filter.description);
         assertTrue(dao.search(searchFilter).contains(news));
-    }
-
-
-    //not completed yet
-    @Test
-    public void searchTestDate() throws SQLException, NewsDaoException {
-        News news = new News("abc", "aaasdwdcsl aaasdaaa", "www.asdwasd.casew",
-                "salkdjw", new Timestamp(new Date().getTime())
-        );
-        insert(news);
-        SearchFilter searchFilter = new SearchFilter();
-        searchFilter.addFilter(LocalDate.now().toString(), Filter.date);
-        assertFalse(dao.search(searchFilter).contains(news));
-        System.out.println(news.getDate());
-        System.out.println(LocalDateTime.now());
     }
 
 

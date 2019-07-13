@@ -9,68 +9,63 @@ import de.l3s.boilerpipe.BoilerpipeProcessingException;
 import de.l3s.boilerpipe.document.TextDocument;
 import de.l3s.boilerpipe.extractors.CommonExtractors;
 import de.l3s.boilerpipe.sax.BoilerpipeSAXInput;
-import de.l3s.boilerpipe.sax.HTMLDocument;
-import de.l3s.boilerpipe.sax.HTMLFetcher;
-import in.nimbo.dao.news_dao.NewsDao;
-import in.nimbo.exception.NewsDaoException;
+import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URL;
-import java.sql.Timestamp;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * Main class for reading RSS from atleast 5 htmlUrls created by Alireza Asadi and Mostafa Ojaghi
+ * Main business class for reading RSS from atleast 5 htmlUrls created by Alireza Asadi and Mostafa Ojaghi
  */
 public class RssFeedReader {
     private static final Logger logger = LoggerFactory.getLogger(RssFeedReader.class);
-    private NewsDao newsDao;
+    private SyndFeedInput syndFeedInput;
 
-    public RssFeedReader(NewsDao newsDao) {
-        this.newsDao = newsDao;
+    RssFeedReader(SyndFeedInput syndFeedInput) {
+        this.syndFeedInput = syndFeedInput;
+    }
+    RssFeedReader(){
+
     }
 
     /**
-     * reads rss from the feedUrl passed to the constructor and inserts into the database
+     * reads feeds from the feedUrl passed to the constructor with rome tool and returns a list of news
      *
-     * @param feedUrl
+     * @param feedUrl the rssUrl to find news from
+     * @return list of news fetched from feedUrl
+     * @throws IOException   thrown if XmlReader can't read feedUrl
+     * @throws FeedException thrown if rome library feed reader can not parse or generate a feed.
      */
-    public void readRSS(URL feedUrl) {
-        try {
-            SyndFeedInput input = new SyndFeedInput();
-            SyndFeed feed = input.build(new XmlReader(feedUrl));
-            for (SyndEntry entry : feed.getEntries()) {
-                try {
-                    String description = getNewsContent(entry.getLink());
-                    newsDao.insert(new News(entry.getTitle(), description, entry.getLink(), entry.getAuthor(), new Timestamp(entry.getPublishedDate().getTime())));
-                } catch (IOException e) {
-                    logger.error("cannot connect to the the link: " + entry.getLink() + "; access denied!! ", e);
-                } catch (NewsDaoException e) {
-                    logger.error(e.getMessage(), e);
-                } catch (SAXException | BoilerpipeProcessingException e) {
-                    logger.error("cannot convert HTMlDocument to TextDocument", e);
-                }
+    public List<News> getNewsFromRss(URL feedUrl) throws IOException, FeedException {
+        SyndFeed feeds = syndFeedInput.build(new XmlReader(feedUrl));
+        List<News> newsList = new LinkedList<>();
+        for (SyndEntry entry : feeds.getEntries()) {
+            try {
+                String description = getNewsContent(entry.getLink());
+                newsList.add(new News(entry.getTitle(), description, entry.getLink(), entry.getAuthor(), entry.getPublishedDate().toString()));
+            } catch (IOException e) {
+                logger.error("cannot connect to the the link: " + entry.getLink() + "; access denied!! ", e);
+            } catch (SAXException | BoilerpipeProcessingException e) {
+                logger.error("cannot convert HTMlDocument to TextDocument", e);
             }
-        } catch (IOException | FeedException e) {
-            logger.error("XmlReader cannot read the feedUrl caused by rome library SyndFeed reader", e);
         }
+        return newsList;
     }
 
-    private boolean isValidUrl(URL url) {
-        String regex = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
-        return url.toString().matches(regex);
+    String fetchHtml(String htmlUrl) throws IOException {
+        return Jsoup.connect(htmlUrl).get().html();
     }
 
-
-    public HTMLDocument fetchHtml(String htmlUrl) throws IOException {
-        return HTMLFetcher.fetch(new URL(htmlUrl));
-    }
-
-    public String getNewsContent(String htmlUrl) throws BoilerpipeProcessingException, SAXException, IOException {
-        HTMLDocument htmlDoc = fetchHtml(htmlUrl);
-        TextDocument doc = new BoilerpipeSAXInput(htmlDoc.toInputSource()).getTextDocument();
+    String getNewsContent(String htmlUrl) throws BoilerpipeProcessingException, SAXException, IOException {
+        String html = fetchHtml(htmlUrl);
+        TextDocument doc = new BoilerpipeSAXInput(new InputSource(new StringReader(html))).getTextDocument();
         return CommonExtractors.ARTICLE_EXTRACTOR.getText(doc);
     }
 
