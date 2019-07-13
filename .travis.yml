@@ -1,2 +1,11 @@
 language: java
-jdk: oraclejdk8
+jdk: openjdk8
+
+addons:
+  sonarcloud:
+    organization: "alirezaasadi2018"
+
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.sonar/cache'

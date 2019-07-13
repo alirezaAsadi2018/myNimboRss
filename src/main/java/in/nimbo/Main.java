@@ -1,90 +1,57 @@
 package in.nimbo;
 
-import com.rometools.rome.io.FeedException;
-import de.l3s.boilerpipe.BoilerpipeProcessingException;
+import asg.cliche.ShellFactory;
+import com.rometools.rome.io.SyndFeedInput;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import in.nimbo.cli.MainMenu;
+import in.nimbo.dao.news_dao.NewsDao;
+import in.nimbo.dao.news_dao.NewsDaoImpl;
+import in.nimbo.dao.url_dao.UrlDao;
+import in.nimbo.dao.url_dao.UrlDaoImpl;
+import in.nimbo.scheduling.ScheduledUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.net.URL;
-import java.sql.SQLException;
-import java.util.Scanner;
+import java.util.concurrent.Executors;
 
 public class Main {
-    private static final Logger logger = LoggerFactory.getLogger(App.class);
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final String DBCONFIGNAME = "dbConfig";
+    private static final String DSCONFIGNAME = "dsConfig";
+
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.println("1. add feed");
-            System.out.println("2. print all");
-            System.out.println("3. search");
-            System.out.println("0. exit");
-            switch (scanner.nextInt()) {
-                case 1:
-                    System.out.println("enter rss url:");
-                    try {
-                        URL feedUrl = new URL(scanner.next());
-                        App app = new App(NewsDaoImpl.getInstance(), feedUrl);
-                        app.readRSS();
-                    } catch (FeedException | SQLException | SAXException | BoilerpipeProcessingException | IOException e) {
-                        logger.error("", e);
-                    }
-                    break;
-                case 2:
-                    try {
-                        System.out.println(NewsDaoImpl.getInstance().getNews());
-                    } catch (SQLException e) {
-                        logger.error("", e);
-                    }
-                    break;
-                case 3:
-                    searchCommand(scanner);
-                    break;
-                case 0:
-                    System.exit(0);
-                    break;
-                default:
-                    System.out.println("enter a valid number");
-            }
-        }
-    }
+        Config dbConfig = ConfigFactory.load(DBCONFIGNAME);
+        Config dsConfig = ConfigFactory.load(DSCONFIGNAME);
+        String newsTableName = dbConfig.getString("newsTable.tableName");
+        String urlTableName = dbConfig.getString("urlTable.tableName");
 
-    private static void searchCommand(Scanner scanner) {
-        System.out.println("search by:");
-        System.out.println("1. title");
-        System.out.println("2. report");
-        System.out.println("3. agency");
-        int num = scanner.nextInt();
-        scanner.nextLine();
-        switch (num) {
-            case 1:
-                System.out.println("string to search");
-                try {
-                    System.out.println(NewsDaoImpl.getInstance().search("title", scanner.nextLine()));
-                } catch (SQLException e) {
-                    logger.error("", e);
-                }
-                break;
-            case 2:
-                System.out.println("string to search");
-                try {
-                    System.out.println(NewsDaoImpl.getInstance().search("dscp", scanner.nextLine()));
-                } catch (SQLException e) {
-                    logger.error("", e);
-                }
-                break;
-            case 3:
-                System.out.println("string to search");
-                try {
-                    System.out.println(NewsDaoImpl.getInstance().search("agency", scanner.nextLine()));
-                } catch (SQLException e) {
-                    logger.error("", e);
-                }
-                break;
-            default:
-                System.out.println("the number is not valid");
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setJdbcUrl(dbConfig.getString("db.url"));
+        hikariConfig.setUsername(dbConfig.getString("db.username"));
+        hikariConfig.setPassword(dbConfig.getString("db.password"));
+        hikariConfig.setMaximumPoolSize(dsConfig.getInt("maximumPoolSize"));
+        hikariConfig.setMinimumIdle(dsConfig.getInt("minimumIdle"));
+        hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", dsConfig.getInt("prepStmtCacheSqlLimit"));
+        hikariConfig.addDataSourceProperty("prepStmtCacheSize", dsConfig.getInt("prepStmtCacheSize"));
+        hikariConfig.addDataSourceProperty("cachePrepStmts", dsConfig.getBoolean("cachePrepStmts"));
+        HikariDataSource dataSource = new HikariDataSource(hikariConfig);
+
+        NewsDao newsDao = new NewsDaoImpl(newsTableName, dataSource);
+        UrlDao urlDao = new UrlDaoImpl(urlTableName, dataSource);
+        SyndFeedInput syndFeedInput = new SyndFeedInput();
+        RssFeedReader rssFeedReader = new RssFeedReader(syndFeedInput);
+
+        new ScheduledUpdater(urlDao, Executors.newFixedThreadPool(10), newsDao, rssFeedReader, 10 * 60).start();
+        try {
+            ShellFactory.createConsoleShell("rssReader", "", new MainMenu(urlDao, newsDao))
+                    .commandLoop();
+        } catch (IOException e) {
+            logger.error("error in Main command loop; 'cliche' can't readLine() from input", e);
         }
     }
 }
