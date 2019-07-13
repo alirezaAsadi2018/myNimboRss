@@ -1,27 +1,19 @@
 package in.nimbo;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 
 /*simple plain old java object class containing get/set methods to store data retrieved using DAO class*/
-@Entity
 public class News {
 
     private static final DateTimeFormatter readFormatter = DateTimeFormatter.ofPattern("E MMM dd HH:mm:ss 'IRDT' yyyy");
     private static final DateTimeFormatter writeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    @Column(name = "title")
     private String title;
     //description is the main content(description) of the news object
-    @Column(name = "description")
     private String description;
-    @Column(name = "link")
     private String link;
-    @Column(name = "agency")
     private String agency;
-    @Column(name = "date")
     private Timestamp date;
 
     public News(String title, String description, String link, String agency, String date) {
