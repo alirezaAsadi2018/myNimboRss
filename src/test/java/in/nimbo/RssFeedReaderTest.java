@@ -1,8 +1,5 @@
 package in.nimbo;
 
-import com.rometools.rome.io.FeedException;
-import com.rometools.rome.io.SyndFeedInput;
-import com.rometools.rome.io.XmlReader;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
@@ -13,14 +10,12 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.Reader;
-import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 public class RssFeedReaderTest {
     private static final Config config = ConfigFactory.load("articleExtractorTestConfig");
@@ -35,41 +30,6 @@ public class RssFeedReaderTest {
         for (int i = 1; i <= numOfTests; i++) {
             htmlurls[i] = config.getObject("urls").unwrapped().get(String.valueOf(i)).toString();
         }
-    }
-
-    @Test
-    public void getNewsFromRssTest() throws IOException, BoilerpipeProcessingException, SAXException, FeedException {
-        SyndFeedInput syndFeedInput = mock(SyndFeedInput.class);
-        URL url = new URL("https://www.isna.ir/rss");
-        when(syndFeedInput.build(any(Reader.class))).thenReturn(
-                new SyndFeedInput().build(new XmlReader(new File(TESTPATH + "rssTest.xml")))
-        );
-        RssFeedReader rssFeedReader = new RssFeedReader(syndFeedInput);
-        rssFeedReader = spy(rssFeedReader);
-        doReturn("description").when(rssFeedReader).getNewsContent(anyString());
-        List<News> list = rssFeedReader.getNewsFromRss(url);
-        assertEquals(1, list.size());//there is only one entry in the rssTest.xml
-        News expected = new News("Example entry",
-                "description",
-                "http://www.example.com/blog/post/1",
-                "wikipedia",
-                "Sun Sep 06 20:50:00 IRDT 2009");
-        News actual = list.get(0);
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void fetchHtml() throws IOException {
-        SyndFeedInput syndFeedInput = new SyndFeedInput();
-        RssFeedReader rssFeedReader = new RssFeedReader(syndFeedInput);
-        for (int i = 1; i <= numOfTests; i++) {
-            String expected = getStringFromFile(new File(TESTPATH + "articleExtractorTest" + i + ".html"));
-            String actual = rssFeedReader.fetchHtml(htmlurls[i]);
-            double confidence = calculateConfidence(expected, actual);
-            assertTrue(confidence >= expectedConfidence);
-        }
-
-
     }
 
     @Test
