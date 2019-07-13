@@ -152,12 +152,6 @@ public class NewsDaoImplTest {
 
     @Test
     public void getNewsTest() throws SQLException, NewsDaoException {
-        PreparedStatement ps = connection.prepareStatement("insert into " +
-                TABLENAME +
-                " (title, description, link, agency, date)" +
-                " values" +
-                " (?, ?, ?, ?, ?);"
-        );
         insert(expectedNews);
         assertTrue(dao.getNews().contains(expectedNews));
     }
