@@ -32,6 +32,7 @@ public class RssFeedReaderTest {
         }
     }
 
+
     @Test
     public void getNewsContent() throws IOException, BoilerpipeProcessingException, SAXException {
         RssFeedReader rssFeedReader = spy(RssFeedReader.class);
